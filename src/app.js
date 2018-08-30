@@ -11,7 +11,7 @@ import * as pf from 'pareto-frontier';
 let MAIN_DATA = {};
 
 
-function loadurl(res){
+function loadurl(res, data_dir){
 
   appendScript("src/accordion.js");
 
@@ -80,7 +80,7 @@ function loadurl(res){
       });
      
       
-      read_json(res[i],divid) 
+      read_json(res[i],divid, data_dir) 
 
 
       //check the transformation to table attribute and append table to html
@@ -102,15 +102,18 @@ function loadurl(res){
 function read_manifest(){
   
   try{
-    
-   let participants = fetch("./data/Manifest.json")
+    let body_cust = document.getElementById("custom_body");
+    let data_dir = body_cust.getAttribute('data-dir');
+
+   let participants = fetch(data_dir+"/data/Manifest.json")
     .then(response => response.json())
     .then(res => {
       res.forEach(function(element) {
         var input = $('<button class="accordion">'+element.id+'</button><div class="panel"><div style= "float:left" data-id='+element.id+' toTable="true" class="benchmarkingChart" ></div></div>');
         $("#custom_body").append(input);
       });
-      loadurl(res);
+      console.log(data_dir);
+      loadurl(res, data_dir);
 
     })
     
@@ -130,12 +133,12 @@ function appendScript(pathToScript) {
 }
 
 
-function read_json(res, divid){
+function read_json(res, divid, data_dir){
 console.log(res);
   var full_json = [];
   res.participants.forEach(function(name) {
     
-    let dat = $.getJSON("./data/"+res.id+"/" + name, function(result){
+    let dat = $.getJSON(data_dir+"/data/"+res.id+"/" + name, function(result){
       let data = result;
       console.log(data)
       return (data)
