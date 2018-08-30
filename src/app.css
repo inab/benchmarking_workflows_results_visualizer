@@ -1,0 +1,121 @@
+
+  
+  .error-line {
+    stroke:black;
+    stroke-dasharray: 2,2;
+  }
+  
+  .error-cap {
+    stroke:black;
+    stroke-width: 1px;
+  }
+  
+    div.benchmark_tooltip {
+      background-color: #fff;
+      padding: 7px;
+      text-shadow: #f5f5f5 0 1px 0;
+      font: 15px Helvetica Neue;
+      border: 4.5px solid;
+      border-color: #0A58A2;
+      border-radius: 3px;
+      opacity: 0.95;
+      position: absolute;
+      box-shadow: rgba(0, 0, 0, 0.3) 0 10px 15px;
+    }
+  
+  .benchmark_tooltip:after {
+      content: " ";
+      position: absolute;
+      top: 50%;
+      right: 100%;
+      margin-top: -10px;
+      border-width: 10px;
+      border-style: solid;
+      border-color: transparent transparent transparent transparent;
+      
+  }
+  
+   .plot-bg {
+     fill:#F8F8F8;
+     stroke: black;
+   }
+      
+   .axis path,
+   .axis line {
+       fill: none;
+       stroke: grey;
+       stroke-width: 1;
+       shape-rendering: crispEdges;
+   }
+
+   .bench_grid {
+    stroke-opacity: 0.1;
+    stroke-dasharray: 7,5;
+  }
+
+    
+    .classificators_list{
+        background-color: #0A58A2; 
+        border-radius: 8px;
+        color: #fff;
+        font-size: 20px;
+        padding-left: 55px;
+        padding-right: 55px;
+        text-align: center;
+    
+        }
+    
+    .classificators_list:hover {
+        background-color: #b3cde0;
+    
+    }
+
+    .benchmarkingTable td {
+        border: 2px solid black;
+        border-collapse: collapse;
+        text-align: center;
+    }
+
+    .benchmarkingTable {
+        width: 17vw; 
+        border-collapse: collapse; 
+        background-color: #f0f0f0;
+        border: 5px solid black; 
+        float: right;
+    }
+
+    .benchmarkingChart{
+        width: 90vw;
+    }
+
+    .benchmarkingSVG{
+        width: 68vw;
+    }
+      .axis--x {
+          font-size: 12px;
+      }
+
+      .axis--y {
+        font-size: 12px;
+    }
+
+    .removal_alert {
+        padding: 10px;
+        background-color: #ffcccc;
+        color: #D10000;
+    }
+    
+    .closebtn {
+        margin-left: 15px;
+        color: #D10000;
+        font-weight: bold;
+        float: right;
+        font-size: 22px;
+        line-height: 20px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    
+    .closebtn:hover {
+        color: white;
+    }

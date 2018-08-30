@@ -1,0 +1,17 @@
+[
+  {
+    "id" : "c1",
+    "participants": ["new_participant.json","new_participant.1.json","new_participant.2.json","new_participant.3.json","new_participant.4.json"]
+  }
+  ,
+  {
+    "id" : "c2",
+    "participants": ["new_participant.json","new_participant.1.json","new_participant.2.json","new_participant.3.json","new_participant.4.json"]
+  },
+  {
+    "id" : "c3",
+    "participants": ["new_participant.json","new_participant.1.json","new_participant.2.json","new_participant.3.json","new_participant.4.json"]
+  }
+
+  
+]
