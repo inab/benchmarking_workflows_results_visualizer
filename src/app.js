@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import './app.css';
 import $ from "jquery";
 import * as pf from 'pareto-frontier';
+import * as bootstrap from 'bootstrap';
 
 
 
@@ -13,7 +14,6 @@ let MAIN_DATA = {};
 
 function loadurl(res, data_dir){
 
-  appendScript("src/accordion.js");
 
     let divid;
     
@@ -101,6 +101,13 @@ function loadurl(res, data_dir){
 
 function read_manifest(){
   
+  // add css
+  // $('head').append('<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">');
+    // append accordion
+  var input = $('<div class="togglebox"></div>');
+  $("#custom_body").append(input);
+   
+
   try{
     let body_cust = document.getElementById("custom_body");
     let data_dir = body_cust.getAttribute('data-dir');
@@ -108,11 +115,21 @@ function read_manifest(){
    let participants = fetch(data_dir+"/data/Manifest.json")
     .then(response => response.json())
     .then(res => {
+      var i = 1;
       res.forEach(function(element) {
-        var input = $('<button class="accordion">'+element.id+'</button><div class="panel"><div style= "float:left" data-id='+element.id+' toTable="true" class="benchmarkingChart" ></div></div>');
-        $("#custom_body").append(input);
+        var input = $('<div>\
+                          <input id="radio'+i+'" type="radio" name="toggle"/>\
+                          <label for="radio'+i+'">'+element.id+'</label>\
+                          <div class="content">\
+                            <div style= "float:left" data-id='+element.id+' toTable="true" class="benchmarkingChart"></div>\
+                          </div>\
+                        </div>');
+                      
+        $(".togglebox").append(input);
+
+      i++;
       });
-      console.log(data_dir);
+        
       loadurl(res, data_dir);
 
     })
@@ -124,38 +141,27 @@ function read_manifest(){
     
 };
 
-function appendScript(pathToScript) {
-  var head = document.getElementsByTagName("head")[0];
-  var js = document.createElement("script");
-  js.type = "text/javascript";
-  js.src = pathToScript;
-  head.appendChild(js);
-}
-
-
 function read_json(res, divid, data_dir){
-console.log(res);
+
   var full_json = [];
   res.participants.forEach(function(name) {
     
     let dat = $.getJSON(data_dir+"/data/"+res.id+"/" + name, function(result){
       let data = result;
-      console.log(data)
+
       return (data)
     });
     full_json.push(dat);
     
   });
-  console.log(full_json)
+
   Promise.all(full_json).then(function(values) {
-    console.log("wtf")
     load_data_chart(values,divid)
   });
 }
 
 function load_data_chart(full_json,divid){
 
-  console.log(full_json);
   MAIN_DATA[divid] = full_json;
   // by default, no classification method is applied. it is the first item in the selection list
   var e = document.getElementById(divid + "_dropdown_list");
@@ -926,7 +932,17 @@ export{
   onQuartileChange
 }
 
+
 read_manifest();
+
+  
+
+
+
+
+
+
+
 
 
 
