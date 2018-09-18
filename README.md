@@ -25,6 +25,10 @@ Install dependencies from package.json :
 npm install 
 ```
 
+Export node moodules :
+```
+export PATH="${PWD}/node_modules/.bin/:$PATH"
+```
 Compile with webpack and visualize sample results in your localhost :
 ```
 ./node_modules/.bin/webpack-cli src/app.js --output=build/build.js -d -w
