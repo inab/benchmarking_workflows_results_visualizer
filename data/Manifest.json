@@ -10,7 +10,7 @@
             "e-Driver.json",
             "OncodriveCLUST.json",
             "MuSiC.json",
-            "NEW.json"
+            "NEW_TOOL.json"
         ]
     },
     {
@@ -24,7 +24,77 @@
             "e-Driver.json",
             "OncodriveCLUST.json",
             "MuSiC.json",
-            "NEW.json"
+            "NEW_TOOL.json"
+        ]
+    },
+    {
+        "id": "ALL",
+        "participants": [
+            "MutSig2CV.json",
+            "compositeDriver.json",
+            "2020plus.json",
+            "OncodriveFM.json",
+            "ActiveDriver.json",
+            "e-Driver.json",
+            "OncodriveCLUST.json",
+            "MuSiC.json",
+            "NEW_TOOL.json"
+        ]
+    },
+    {
+        "id": "BLCA",
+        "participants": [
+            "MutSig2CV.json",
+            "compositeDriver.json",
+            "2020plus.json",
+            "OncodriveFM.json",
+            "ActiveDriver.json",
+            "e-Driver.json",
+            "OncodriveCLUST.json",
+            "MuSiC.json",
+            "NEW_TOOL.json"
+        ]
+    },
+    {
+        "id": "CHOL",
+        "participants": [
+            "MutSig2CV.json",
+            "compositeDriver.json",
+            "2020plus.json",
+            "OncodriveFM.json",
+            "ActiveDriver.json",
+            "e-Driver.json",
+            "OncodriveCLUST.json",
+            "MuSiC.json",
+            "NEW_TOOL.json"
+        ]
+    },
+    {
+        "id": "LUAD",
+        "participants": [
+            "MutSig2CV.json",
+            "compositeDriver.json",
+            "2020plus.json",
+            "OncodriveFM.json",
+            "ActiveDriver.json",
+            "e-Driver.json",
+            "OncodriveCLUST.json",
+            "MuSiC.json",
+            "NEW_TOOL.json"
+        ]
+    },
+    {
+        "id": "PANCAN",
+        "participants": [
+            "MutSig2CV.json",
+            "compositeDriver.json",
+            "2020plus.json",
+            "OncodriveFM.json",
+            "ActiveDriver.json",
+            "e-Driver.json",
+            "OncodriveCLUST.json",
+            "MuSiC.json",
+            "NEW_TOOL.json"
         ]
     }
 ]

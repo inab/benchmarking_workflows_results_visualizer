@@ -38,6 +38,7 @@
    .plot-bg {
      fill:#F8F8F8;
      stroke: black;
+
    }
       
    .axis path,
@@ -127,7 +128,7 @@
 .togglebox {
  width: 100%;
  margin: 0 auto;
- background: #CCCCCC;
+ background: #F0F0F0;
 }
 
 input[type="radio"] {
@@ -144,17 +145,18 @@ label {
  font-size: 14px;
  font-weight: bold;
  color: white;
- background: grey;
+ background: #056483;
  cursor: pointer;
 }
 
 label:hover {
- background: #CCCCCC;
- color:black;
+ background: #b3cde0;
+ color: white;
 }
 
 label:after {
  content: '\f078';
+ float: right;
  top: 0px;
  right: 20px;
  font-family: fontawesome;
@@ -166,7 +168,7 @@ label:after {
 }
 
 input[type="radio"]:checked ~ label {
- color: rgba(255, 255, 255, 0.8);
+    color: white;
 }
 
 input[type="radio"]:checked ~ label:after {

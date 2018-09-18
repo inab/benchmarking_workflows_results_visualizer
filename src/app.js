@@ -11,6 +11,41 @@ import * as bootstrap from 'bootstrap';
 
 let MAIN_DATA = {};
 
+var cancer_names = {ALL:"All cancer types",
+ACC:"Adrenocortical Carcinoma",
+BLCA:"Bladder Urothelial Carcinoma",
+BRCA:"Breast Invasive Carcinoma",
+CESC:"Cervical Squamous Cell Carcinoma and Endocervical Adenocarcinoma",
+CHOL:"Cholangiocarcinoma",
+COAD:"Colon Adenocarcinoma",
+DLBC:"Lymphoid Neoplasm Diffuse Large B-cell Lymphoma",
+ESCA:"Esophageal Carcinoma",
+GBM:"Glioblastoma Multiforme",
+HNSC:"Head and Neck Squamous Cell Carcinoma",
+KICH:"Kidney Chromophobe",
+KIRC:"Kidney Renal Clear Cell Carcinoma",
+KIRP:"Kidney Renal Papillary Cell Carcinoma",
+LAML:"Acute Myeloid Leukemia",
+LGG:"Brain Lower Grade Glioma",
+LIHC:"Liver Hepatocellular Carcinoma",
+LUAD:"Lung Adenocarcinoma",
+LUSC:"Lung Squamous Cell Carcinoma",
+MESO:"Mesothelioma",
+OV:"Ovarian Serous Cystadenocarcinoma",
+PAAD:"Pancreatic Adenocarcinoma",
+PANCAN:"Previous PanCancer study",
+PCPG:"Pheochromocytoma and Paraganglioma",
+PRAD:"Prostate Adenocarcinoma",
+READ:"Rectum Adenocarcinoma",
+SARC:"Sarcoma",
+SKCM:"Skin Cutaneous Melanoma",
+STAD:"Stomach Adenocarcinoma",
+TGCT:"Testicular Germ Cell Tumors",
+THCA:"Thyroid Carcinoma",
+THYM:"Thymoma",
+UCEC:"Uterine Corpus Endometrial Carcinoma",
+UCS:"Uterine Carcinosarcoma",
+UVM:"Uveal Melanoma"};
 
 function loadurl(res, data_dir){
 
@@ -44,6 +79,9 @@ function loadurl(res, data_dir){
       let select_list = d3.select('#'+divid).append("form").append("select")
       .attr("class","classificators_list")
       .attr("id",divid + "_dropdown_list")
+      .on('change', function(d) {
+        onQuartileChange(this.options[this.selectedIndex].id);
+      })
       .append("optgroup")
       .attr("label","Select a classification method:");
 
@@ -55,9 +93,7 @@ function loadurl(res, data_dir){
       .attr("data-toggle", "list_tooltip")
       .attr("data-container", "#tooltip_container") 
       .text("NO CLASSIFICATION")
-      .on('click', function(d) {
-        onQuartileChange(this.id);
-      });
+      
       select_list.append("option")
       .attr("class", "selection_option")
       .attr("id", button2_id)
@@ -65,9 +101,7 @@ function loadurl(res, data_dir){
       .attr("data-toggle", "list_tooltip")
       .attr("data-container", "#tooltip_container") 
       .text("SQUARE QUARTILES")
-      .on('click', function(d) {
-        onQuartileChange(this.id);
-      });
+
       select_list.append("option")
       .attr("class", "selection_option")
       .attr("id", button3_id)
@@ -75,9 +109,7 @@ function loadurl(res, data_dir){
       .attr("data-toggle", "list_tooltip")
       .attr("data-container", "#tooltip_container") 
       .text("DIAGONAL QUARTILES")
-      .on('click', function(d) {
-        onQuartileChange(this.id);
-      });
+
      
       
       read_json(res[i],divid, data_dir) 
@@ -99,32 +131,41 @@ function loadurl(res, data_dir){
 };
 
 
-function read_manifest(){
+function read_manifest(cancer_names){
   
   // add css
   // $('head').append('<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">');
     // append accordion
   var input = $('<div class="togglebox"></div>');
   $("#custom_body").append(input);
-   
+  
 
   try{
     let body_cust = document.getElementById("custom_body");
     let data_dir = body_cust.getAttribute('data-dir');
+    let x_axis_label = body_cust.getAttribute('x-label');
+    let y_axis_label = body_cust.getAttribute('y-label');
 
    let participants = fetch(data_dir+"/data/Manifest.json")
     .then(response => response.json())
     .then(res => {
       var i = 1;
       res.forEach(function(element) {
+
+        if (element.id in cancer_names){
+          var full_name = element.id + " - " + cancer_names[element.id];
+        } else {
+          var full_name = element.id;
+        };
+
         var input = $('<div>\
                           <input id="radio'+i+'" type="radio" name="toggle"/>\
-                          <label for="radio'+i+'">'+element.id+'</label>\
+                          <label for="radio'+i+'">Cancer type: '+full_name+'</label>\
                           <div class="content">\
-                            <div style= "float:left" data-id='+element.id+' toTable="true" class="benchmarkingChart"></div>\
+                            <div style= "float:left" data-id='+element.id+' toTable="true" x-label="'+x_axis_label+'" y-label="'+y_axis_label+'" class="benchmarkingChart"></div>\
                           </div>\
-                        </div>');
-                      
+                        </div>'); 
+                
         $(".togglebox").append(input);
 
       i++;
@@ -206,29 +247,29 @@ function compute_classification(data, svg, xScale, yScale, div, width, height, r
 function compute_chart_height(data){
 
   if (data.length%5 == 0){
-    return (40 + (20 * (Math.trunc(data.length/5))));
+    return (80 + (20 * (Math.trunc(data.length/5))));
   } else if (data.lenght%5 != 0) {
-    return (40 + (20 * (Math.trunc(data.length/5)+1)));
+    return (80 + (20 * (Math.trunc(data.length/5)+1)));
   } 
   
 };
 
 function createChart (data,divid, classification_type){
   // console.log(data)
-  let margin = {top: 20, right: 40, bottom: compute_chart_height(data), left: 40},
+  let margin = {top: 20, right: 40, bottom: compute_chart_height(data), left: 60},
     width = Math.round($(window).width()* 0.6818) - margin.left - margin.right,
     height = Math.round($(window).height()* 0.5787037) - margin.top - margin.bottom;
 
   let xScale = d3.scaleLinear()
     .range([0, width])
     .domain([d3.min(data, function(d) { return d.x; }), d3.max(data, function(d) { return d.x; })]).nice();
-
+    // .domain([0,1]);
   let min_y = d3.min(data, function(d) { return d.y; });
   let max_y = d3.max(data, function(d) { return d.y; });
   let yScale = d3.scaleLinear()
     .range([height, 0])
     .domain([min_y - 0.3*(max_y-min_y), max_y + 0.3*(max_y-min_y)]).nice();
-
+    // .domain([0,1]);
   let xAxis = d3.axisBottom(xScale).ticks(12),
       yAxis = d3.axisLeft(yScale).ticks(12 * height / width);
 
@@ -259,12 +300,33 @@ function createChart (data,divid, classification_type){
     
   svg.append("g").append("rect").attr("width", width).attr("height", height).attr("class", "plot-bg");
 
-  // Add Axis labels
+  // Add Axis numbers
   svg.append("g").attr("class", "axis axis--x")
     .attr("transform", "translate(" + 0 + "," + height + ")")
     .call(xAxis);
 
   svg.append("g").attr("class", "axis axis--y").call(yAxis);
+
+    
+  // add axis labels
+  svg.append("text")             
+  .attr("transform",
+        "translate(" + (width/2) + " ," + 
+        (height + margin.top + (Math.round($(window).height()* 0.0347))) + ")")
+  .style("text-anchor", "middle")
+  .style("font-weight", "bold")
+  .style("font-size", "1vw")
+  .text(document.getElementById(divid).getAttribute('x-label'));
+
+  svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0 - margin.left)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .style("font-weight", "bold")
+      .style("font-size", "1vw")
+      .text(document.getElementById(divid).getAttribute('y-label')); 
   
   // add X and Y Gridlines
   var gridlines_x = d3.axisBottom()
@@ -286,7 +348,7 @@ function createChart (data,divid, classification_type){
      svg.append("g")
      .attr("class", "bench_grid")
      .call(gridlines_y);
-         
+
   let removed_tools = []; // this array stores the tools when the user clicks on them
 
    // setup fill color
@@ -381,25 +443,53 @@ function append_dots_errobars (svg, data, xScale, yScale, div, cValue, color,div
       .attr("r", 6)
       .style("fill", function(d) {
         return color(cValue(d));
-      })
-      .on("mouseover", function(d) {
-        // show tooltip only if the tool is visible
-        let ID = divid+"___"+d.toolname.replace(/[\. ()/-]/g, "_");
-        if (d3.select("#"+ID).style("opacity") == 1) {
-          div.transition()		
-              .duration(100)		
-              .style("opacity", .9);		
-          div.html(d.toolname + "<br/>"  + formatComma(d.x) + "<br/>"  + formatDecimal(d.y))	
-              .style("left", (d3.event.pageX) + "px")		
-              .style("top", (d3.event.pageY) + "px");
-        }
-      })					
-      .on("mouseout", function(d) {		
-        div.transition()		
-          .duration(1500)		
-          .style("opacity", 0);	
       });
+      // .on("mouseover", function(d) {
+      //   // show tooltip only if the tool is visible
+      //   let ID = divid+"___"+d.toolname.replace(/[\. ()/-]/g, "_");
+      //   if (d3.select("#"+ID).style("opacity") == 1) {
+      //     div.transition()		
+      //         .duration(100)		
+      //         .style("opacity", .9);		
+      //     div.html(d.toolname + "<br/>"  + formatComma(d.x) + "<br/>"  + formatDecimal(d.y))	
+      //         .style("left", (d3.event.pageX) + "px")		
+      //         .style("top", (d3.event.pageY) + "px");
+      //   }
+      // })					
+      // .on("mouseout", function(d) {		
+      //   div.transition()		
+      //     .duration(1500)		
+      //     .style("opacity", 0);	
+      // });
     
+  // append optimization arrow
+    
+  svg.append("svg:defs").append("svg:marker")
+  .attr("id", "opt_triangle")
+  .attr("refX", 6)
+  .attr("refY", 6)
+  .attr("markerWidth", 30)
+  .attr("markerHeight", 30)
+  .attr("markerUnits","userSpaceOnUse")
+  .attr("orient", "auto")
+  .append("path")
+  .attr("d", "M 0 0 12 6 0 12 3 6")
+  .style("fill", "black")
+  .style("opacity", 0.7);
+
+  let x_axis = xScale.domain();
+let y_axis = yScale.domain();
+
+  var line = svg.append("line")
+  .attr("x1",xScale(x_axis[1]-(0.05*(x_axis[1]-x_axis[0]))))  
+  .attr("y1",yScale(y_axis[1]-(0.1*(y_axis[1]-y_axis[0]))))  
+  .attr("x2",xScale(x_axis[1]-(0.009*(x_axis[1]-x_axis[0]))))  
+  .attr("y2",yScale(y_axis[1]-(0.03*(y_axis[1]-y_axis[0]))))  
+  .attr("stroke","black")  
+  .attr("stroke-width",2)  
+  .attr("marker-end","url(#opt_triangle)")
+  .style("opacity", 0.4);  
+  
 };
 
 function draw_legend (data, svg, xScale, yScale, div, width, height, removed_tools, color, color_domain, margin,divid,classification_type) {
@@ -411,7 +501,7 @@ function draw_legend (data, svg, xScale, yScale, div, width, height, removed_too
     .data(color_domain)
     .enter().append("g")
     .attr("class", "legend")
-    .attr("transform", function(d, i) { return "translate(" + (-width+i%n*(Math.round($(window).width()* 0.113636))) + "," + (height + (Math.round($(window).height()* 0.0462962)) + Math.floor(i/n) * (Math.round($(window).height()* 0.0231481))) + ")"; });
+    .attr("transform", function(d, i) { return "translate(" + (-width+i%n*(Math.round($(window).width()* 0.113636))) + "," + (height + (Math.round($(window).height()* 0.0862962)) + Math.floor(i/n) * (Math.round($(window).height()* 0.0231481))) + ")"; });
   
   // draw legend colored rectangles
   legend.append("rect")
@@ -581,20 +671,20 @@ function get_square_quartiles(data, svg, xScale, yScale, div, removed_tools,bett
     .attr("stroke", "#0A58A2")
     .attr("stroke-width",3)
     .style("stroke-dasharray", ("20, 5"))
-    .style("opacity", 0.4)
-    .on("mouseover", function(d) {	
-      div.transition()		
-         .duration(100)		
-         .style("opacity", .9);		
-      div.html("X quartile = " + formatComma( quantile_x) )	
-         .style("left", (d3.event.pageX) + "px")		
-         .style("top", (d3.event.pageY) + "px");
-    })					
-    .on("mouseout", function(d) {		
-      div.transition()		
-         .duration(1000)		
-         .style("opacity", 0);	
-    });
+    .style("opacity", 0.4);
+    // .on("mouseover", function(d) {	
+    //   div.transition()		
+    //      .duration(100)		
+    //      .style("opacity", .9);		
+    //   div.html("X quartile = " + formatComma( quantile_x) )	
+    //      .style("left", (d3.event.pageX) + "px")		
+    //      .style("top", (d3.event.pageY) + "px");
+    // })					
+    // .on("mouseout", function(d) {		
+    //   div.transition()		
+    //      .duration(1000)		
+    //      .style("opacity", 0);	
+    // });
 
   svg.append("line")
     .attr("x1", xScale(x_axis[0]))
@@ -605,20 +695,20 @@ function get_square_quartiles(data, svg, xScale, yScale, div, removed_tools,bett
     .attr("stroke", "#0A58A2")
     .attr("stroke-width",3)
     .style("stroke-dasharray", ("20, 5"))
-    .style("opacity", 0.4)
-    .on("mouseover", function(d) {	
-      div.transition()		
-         .duration(100)		
-         .style("opacity", .9);		
-      div	.html("Y quartile = " + formatComma(quantile_y) )	
-          .style("left", (d3.event.pageX) + "px")		
-          .style("top", (d3.event.pageY) + "px");
-    })					
-    .on("mouseout", function(d) {		
-      div.transition()		
-         .duration(1500)		
-         .style("opacity", 0);	
-    });
+    .style("opacity", 0.4);
+    // .on("mouseover", function(d) {	
+    //   div.transition()		
+    //      .duration(100)		
+    //      .style("opacity", .9);		
+    //   div	.html("Y quartile = " + formatComma(quantile_y) )	
+    //       .style("left", (d3.event.pageX) + "px")		
+    //       .style("top", (d3.event.pageY) + "px");
+    // })					
+    // .on("mouseout", function(d) {		
+    //   div.transition()		
+    //      .duration(1500)		
+    //      .style("opacity", 0);	
+    // });
 
     //the tranformation to tabular format is done only if there are any table elements in the html file
     if (transform_to_table == true) {
@@ -686,16 +776,16 @@ function append_quartile_numbers_to_plot (svg, xScale, yScale, better,divid){
   .attr("x", xScale(x_axis[1]-(0.05*(x_axis[1]-x_axis[0]))))
   .attr("y", yScale(y_axis[1]-(0.97*(y_axis[1]-y_axis[0]))))
   .style("opacity", 0.4)
-  .style("font-size", "40px")
+  .style("font-size", "2vw")
   .style("fill", "#0A58A2")
   .text(num_bottom_right);
 
   svg.append("text")
   .attr("id", function (d) { return divid+"___num_bottom_left";})
-  .attr("x", xScale(x_axis[1]-(0.95*(x_axis[1]-x_axis[0]))))
+  .attr("x", xScale(x_axis[1]-(0.98*(x_axis[1]-x_axis[0]))))
   .attr("y", yScale(y_axis[1]-(0.97*(y_axis[1]-y_axis[0]))))
   .style("opacity", 0.4)
-  .style("font-size", "40px")
+  .style("font-size", "2vw")
   .style("fill", "#0A58A2")
   .text(num_bottom_left);
 
@@ -704,16 +794,16 @@ function append_quartile_numbers_to_plot (svg, xScale, yScale, better,divid){
   .attr("x", xScale(x_axis[1]-(0.05*(x_axis[1]-x_axis[0]))))
   .attr("y", yScale(y_axis[1]-(0.1*(y_axis[1]-y_axis[0]))))
   .style("opacity", 0.4)
-  .style("font-size", "40px")
+  .style("font-size", "2vw")
   .style("fill", "#0A58A2")
   .text(num_top_right);
 
   svg.append("text")
   .attr("id", function (d) { return divid+"___num_top_left";})
-  .attr("x", xScale(x_axis[1]-(0.95*(x_axis[1]-x_axis[0]))))
+  .attr("x", xScale(x_axis[1]-(0.98*(x_axis[1]-x_axis[0]))))
   .attr("y", yScale(y_axis[1]-(0.1*(y_axis[1]-y_axis[0]))))
   .style("opacity", 0.4)
-  .style("font-size", "40px")
+  .style("font-size", "2vw")
   .style("fill", "#0A58A2")
   .text(num_top_left);
 
@@ -933,7 +1023,7 @@ export{
 }
 
 
-read_manifest();
+read_manifest(cancer_names);
 
   
 
