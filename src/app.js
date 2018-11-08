@@ -2,7 +2,8 @@ import * as d3 from 'd3';
 import './app.css';
 import $ from "jquery";
 import * as pf from 'pareto-frontier';
-import * as bootstrap from 'bootstrap';
+import *  as clusterMaker from 'clusters';
+import * as d3Polygon from "d3-polygon";
 
 
 
@@ -71,47 +72,55 @@ function loadurl(res, data_dir){
       let button1_id = divid + "__none";
       let button2_id = divid + "__squares";
       let button3_id = divid + "__diagonals";
+      let button4_id = divid + "__clusters";
       
       // append selection list tooltip container
       d3.select('#'+divid).append("div")
         .attr("id", "tooltip_container")
 
-      let select_list = d3.select('#'+divid).append("form").append("select")
-      .attr("class","classificators_list")
-      .attr("id",divid + "_dropdown_list")
-      .on('change', function(d) {
-        onQuartileChange(this.options[this.selectedIndex].id);
-      })
-      .append("optgroup")
-      .attr("label","Select a classification method:");
+        let select_list = d3.select('#'+divid).append("form").append("select")
+        .attr("class","classificators_list")
+        .attr("id",divid + "_dropdown_list")
+        .on('change', function(d) {
+          onQuartileChange(this.options[this.selectedIndex].id);
+        })
+        .append("optgroup")
+        .attr("label","Select a classification method:");
+  
+        select_list.append("option")
+        .attr("class", "selection_option")
+        .attr("id", button1_id)
+        .attr("title", "Show only raw data")
+        .attr("selected","disabled")
+        .attr("data-toggle", "list_tooltip")
+        .attr("data-container", "#tooltip_container") 
+        .text("NO CLASSIFICATION")
+        
+        select_list.append("option")
+        .attr("class", "selection_option")
+        .attr("id", button2_id)
+        .attr("title", "Apply square quartiles classification method (based on the 0.5 quartile of the X and Y metrics)")
+        .attr("data-toggle", "list_tooltip")
+        .attr("data-container", "#tooltip_container") 
+        .text("SQUARE QUARTILES")
+  
+        select_list.append("option")
+        .attr("class", "selection_option")
+        .attr("id", button3_id)
+        .attr("title", "Apply diagonal quartiles classifcation method (based on the assignment of a score to each participant proceeding from its distance to the 'optimal performance' corner)")
+        .attr("data-toggle", "list_tooltip")
+        .attr("data-container", "#tooltip_container") 
+        .text("DIAGONAL QUARTILES")
 
-      select_list.append("option")
-      .attr("class", "selection_option")
-      .attr("id", button1_id)
-      .attr("title", "Show only raw data")
-      .attr("selected","disabled")
-      .attr("data-toggle", "list_tooltip")
-      .attr("data-container", "#tooltip_container") 
-      .text("NO CLASSIFICATION")
-      
-      select_list.append("option")
-      .attr("class", "selection_option")
-      .attr("id", button2_id)
-      .attr("title", "Apply square quartiles classification method (based on the 0.5 quartile of the X and Y metrics)")
-      .attr("data-toggle", "list_tooltip")
-      .attr("data-container", "#tooltip_container") 
-      .text("SQUARE QUARTILES")
-
-      select_list.append("option")
-      .attr("class", "selection_option")
-      .attr("id", button3_id)
-      .attr("title", "Apply diagonal quartiles classifcation method (based on the assignment of a score to each participant proceeding from its distance to the 'optimal performance' corner)")
-      .attr("data-toggle", "list_tooltip")
-      .attr("data-container", "#tooltip_container") 
-      .text("DIAGONAL QUARTILES")
+        select_list.append("option")
+        .attr("class", "selection_option")
+        .attr("id", button4_id)
+        .attr("title", "Apply diagonal quartiles classifcation method (based on the assignment of a score to each participant proceeding from its distance to the 'optimal performance' corner)")
+        .attr("data-toggle", "list_tooltip")
+        .attr("data-container", "#tooltip_container") 
+        .text("K-MEANS CLUSTERING")
 
      
-      
       read_json(res[i],divid, data_dir) 
 
 
@@ -230,6 +239,9 @@ function compute_classification(data, svg, xScale, yScale, div, width, height, r
   };
 
   let better = "top-right";
+  // append optimization arrow
+  add_arrow(divid, svg, xScale, yScale, better);
+
   if (classification_type == ( divid + "__squares")) {
     draw_pareto(data, svg, xScale, yScale, div, width, height, removed_tools,divid, better);
     get_square_quartiles(data, svg, xScale, yScale, div, removed_tools,better,divid, transform_to_table);
@@ -238,10 +250,73 @@ function compute_classification(data, svg, xScale, yScale, div, width, height, r
   else if (classification_type == (divid + "__diagonals")) {
     draw_pareto(data, svg, xScale, yScale, div, width, height, removed_tools,divid, better);
     get_diagonal_quartiles(data, svg, xScale, yScale, div, width, height, removed_tools, better,divid, transform_to_table);
+  } 
+  else if (classification_type == (divid + "__clusters")) {
+    draw_pareto(data, svg, xScale, yScale, div, width, height, removed_tools,divid, better);
+    get_clusters(data, svg, xScale, yScale, div, width, height, removed_tools, better,divid, transform_to_table);
   } else {
     draw_pareto(data, svg, xScale, yScale, div, width, height, removed_tools,divid, better);
   }
   
+};
+
+function add_arrow(divid, svg, xScale, yScale, better){
+
+  // append optimization arrow
+  
+  svg.append("svg:defs").append("svg:marker")
+  .attr("id", "opt_triangle")
+  .attr("class", function (d) { return divid+"___better_annotation";})
+  .attr("refX", 6)
+  .attr("refY", 6)
+  .attr("markerWidth", 30)
+  .attr("markerHeight", 30)
+  .attr("markerUnits","userSpaceOnUse")
+  .attr("orient", "auto")
+  .append("path")
+  .attr("d", "M 0 0 12 6 0 12 3 6")
+  .style("fill", "black")
+  .style("opacity", 0.7);
+
+  let x_axis = xScale.domain();
+  let y_axis = yScale.domain();
+
+  // set coordinates depending on optimization
+  let x1, y1, x2, y2, top;
+  if (better == "bottom-right"){
+    x1 = (x_axis[1]-(0.05*(x_axis[1]-x_axis[0])))
+    y1 = (y_axis[1]-(0.9*(y_axis[1]-y_axis[0])))
+    x2 = (x_axis[1]-(0.009*(x_axis[1]-x_axis[0]))) 
+    y2 = (y_axis[1]-(0.97*(y_axis[1]-y_axis[0]))) 
+    top = 0
+ } 
+ else if (better == "top-right"){
+    x1 = (x_axis[1]-(0.05*(x_axis[1]-x_axis[0])))
+    y1 = (y_axis[1]-(0.1*(y_axis[1]-y_axis[0])))
+    x2 = (x_axis[1]-(0.009*(x_axis[1]-x_axis[0]))) 
+    y2 = (y_axis[1]-(0.03*(y_axis[1]-y_axis[0]))) 
+    top = 1
+ };
+
+  var line = svg.append("line")
+  .attr("class", function (d) { return divid+"___better_annotation";})
+  .attr("x1",xScale(x1))
+  .attr("y1",yScale(y1))
+  .attr("x2",xScale(x2)) 
+  .attr("y2",yScale(y2))
+  .attr("stroke","black")  
+  .attr("stroke-width",2)  
+  .attr("marker-end","url(#opt_triangle)")
+  .style("opacity", 0.4);  
+
+  svg.append("text")
+  .attr("class", function (d) { return divid+"___better_annotation";})
+  .attr("x", xScale(x_axis[1]))
+  .attr("y", yScale(y_axis[top]))
+  .style("opacity", 0.4)
+  .style("font-size", ".7vw")
+  .text("better");
+
 };
 
 function compute_chart_height(data){
@@ -315,7 +390,7 @@ function createChart (data,divid, classification_type){
         (height + margin.top + (Math.round($(window).height()* 0.0347))) + ")")
   .style("text-anchor", "middle")
   .style("font-weight", "bold")
-  .style("font-size", "1vw")
+  .style("font-size", ".75vw")
   .text(document.getElementById(divid).getAttribute('x-label'));
 
   svg.append("text")
@@ -325,7 +400,7 @@ function createChart (data,divid, classification_type){
       .attr("dy", "1em")
       .style("text-anchor", "middle")
       .style("font-weight", "bold")
-      .style("font-size", "1vw")
+      .style("font-size", ".75vw")
       .text(document.getElementById(divid).getAttribute('y-label')); 
   
   // add X and Y Gridlines
@@ -615,6 +690,11 @@ function show_or_hide_participant_in_plot (ID, data, svg, xScale, yScale, div, w
   svg.selectAll("#"+divid+"___num_bottom_left").remove();
   svg.selectAll("#"+divid+"___num_top_left").remove();
   svg.selectAll("#"+divid+"___pareto" ).remove();
+  svg.selectAll("."+divid+"___diag_num").remove();
+  svg.selectAll("."+divid+"___cluster_num").remove();
+  svg.selectAll("."+divid+"___clust_lines").remove();
+  svg.selectAll("."+divid+"___clust_polygons").remove();
+  svg.selectAll("."+divid+"___better_annotation").remove();
 
   let blockopacity = d3.select("#"+ID).style("opacity");
   
@@ -1015,6 +1095,169 @@ function set_cell_colors(){
 
   });
 
+};
+
+function get_clusters(data, svg, xScale, yScale, div, width, height, removed_tools, better,divid, transform_to_table) {
+
+  let tools_not_hidden = remove_hidden_tools(data, removed_tools);
+  let x_values = tools_not_hidden.map(a => a.x);
+  let y_values = tools_not_hidden.map(a => a.y);
+
+  let coordinates = [];
+
+  for (let i = 0; i < x_values.length; i++) {
+    coordinates.push([x_values[i], y_values[i]]);
+  };
+  
+  //number of clusters
+  clusterMaker.k(4);
+
+  //number of iterations (higher number gives more time to converge)
+  clusterMaker.iterations(500);
+
+  //data from which to identify clusters
+  clusterMaker.data(coordinates);
+
+  let results = clusterMaker.clusters();
+
+  // normalize data to 0-1 range
+  let centroids_x = []
+  let centroids_y = []
+  results.forEach(function(element) {
+      centroids_x.push(element.centroid[0])
+      centroids_y.push(element.centroid[1])
+  });
+  let [x_norm, y_norm] = normalize_data(centroids_x, centroids_y)
+
+  // get distance from centroids to better corner
+
+  let scores = [];
+  if (better == "top-right") {
+
+    for (let i = 0; i < x_norm.length; i++) {
+      let distance = x_norm[i] + y_norm[i];
+      scores.push(distance);
+      results[i]['score'] = distance;
+    };
+
+  } else if (better == "bottom-right"){
+    
+    for (let i = 0; i < x_norm.length; i++) {
+      let distance = x_norm[i] + (1 - y_norm[i]);
+      scores.push(distance);
+      results[i]['score'] = distance;
+    };
+  };
+
+  let sorted_results = sortByKey(results, "score");
+
+  sorted_results = print_clusters(svg, divid, xScale, yScale, sorted_results);
+    
+  //the tranformation to tabular format is done only if there are any table elements in the html file
+  if (transform_to_table == true) {
+    transform_clust_classif_to_table(tools_not_hidden, sorted_results, divid);
+  };
+
+};
+
+
+function print_clusters(svg, divid, xScale, yScale, sorted_results){
+
+  let cluster_no = 1;
+
+  var arrayOfPolygons =  [];
+
+  sorted_results.forEach(function(element) {
+
+    var poly = [];
+
+    element['cluster'] = cluster_no;
+    svg.append("text")
+      .attr("class", function (d) { return divid+"___cluster_num";})
+      .attr("x", xScale(element.centroid[0]))
+      .attr("y", yScale(element.centroid[1]))
+      .style("opacity", 0.9)
+      .style("font-size", "2vw")
+      .style("fill", "#0A58A2")
+      .text(cluster_no);
+    let participants = element['points'];
+    participants.forEach(function(coords) {
+
+      poly.push([coords[0], coords[1]])
+      svg.append("line")
+       .attr("x1", xScale(element.centroid[0]))
+       .attr("y1", yScale(element.centroid[1]))
+       .attr("x2", xScale(coords[0]))
+       .attr("y2", yScale(coords[1]))  
+       .attr("class", function (d) { return divid+"___clust_lines";})
+       .attr("stroke", "#0A58A2")
+       .attr("stroke-width",2)
+       .style("stroke-dasharray", ("20, 5"))
+       .style("opacity", 0.4)
+    });
+
+    var hull = d3Polygon.polygonHull(poly);
+
+    arrayOfPolygons.push({"points": hull});
+
+    cluster_no++;
+  });
+
+  svg.selectAll("polygon")
+  .data(arrayOfPolygons)
+  .enter().append("polygon")
+  .attr("points",function(d) { 
+    if (d.points != null){
+      return d.points.map(function(d) { 
+        return [xScale(d[0]),yScale(d[1])].join(",");
+      }).join(" ");
+    };
+  })
+  .attr("class", function (d) { return divid+"___clust_polygons";})
+  .attr("fill", "#0A58A2")
+  .style("opacity", 0.1);
+
+    
+
+  return (sorted_results);
+};
+
+
+function transform_clust_classif_to_table(data, results, divid){
+
+  data.forEach(function(element) {
+
+    let coords = [element.x, element.y];
+
+    results.forEach(function(result) {
+      
+      if (isArrayInArray(result.points, coords) == true){
+        element['quartile'] = result.cluster;
+      };
+
+    });
+  });
+
+  fill_in_table (divid, data);
+  set_cell_colors();
+
+};
+
+
+function sortByKey(array, key) {
+  return array.sort(function(a, b) {
+      var x = a[key]; var y = b[key];
+      return ((x < y) ? -1 : ((x > y) ? 1 : 0)) * -1;
+  });
+};
+
+function isArrayInArray(arr, item){
+  var item_as_string = JSON.stringify(item);
+
+  var contains = arr.some(function(ele){
+    return JSON.stringify(ele) === item_as_string;
+  });
+  return contains;
 };
 
 export{
