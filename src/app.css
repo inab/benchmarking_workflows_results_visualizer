@@ -38,7 +38,6 @@
    .plot-bg {
      fill:#F8F8F8;
      stroke: black;
-
    }
       
    .axis path,
@@ -59,10 +58,11 @@
         background-color: #0A58A2; 
         border-radius: 8px;
         color: #fff;
-        font-size: 20px;
-        padding-left: 55px;
-        padding-right: 55px;
+        font-size: 1vw;
+        padding-left: 25px;
+        padding-right: 25px;
         text-align: center;
+        width: 20vw;
     
         }
     
@@ -75,22 +75,27 @@
         border: 2px solid black;
         border-collapse: collapse;
         text-align: center;
+        font-size: .7vw;
     }
 
     .benchmarkingTable {
-        width: 12vw; 
+        width: 17vw; 
         border-collapse: collapse; 
         background-color: #f0f0f0;
         border: 5px solid black; 
         float: right;
     }
 
+    .benchmark_legend_rect {
+        cursor: pointer;
+    }
+
     .benchmarkingChart{
-        width: 80vw;
+        width: 90vw;
     }
 
     .benchmarkingSVG{
-        width: 61vw;
+        width: 68vw;
     }
       .axis--x {
           font-size: 12px;
