@@ -12,41 +12,6 @@ import * as d3Polygon from "d3-polygon";
 
 let MAIN_DATA = {};
 
-var cancer_names = {ALL:"All cancer types",
-ACC:"Adrenocortical Carcinoma",
-BLCA:"Bladder Urothelial Carcinoma",
-BRCA:"Breast Invasive Carcinoma",
-CESC:"Cervical Squamous Cell Carcinoma and Endocervical Adenocarcinoma",
-CHOL:"Cholangiocarcinoma",
-COAD:"Colon Adenocarcinoma",
-DLBC:"Lymphoid Neoplasm Diffuse Large B-cell Lymphoma",
-ESCA:"Esophageal Carcinoma",
-GBM:"Glioblastoma Multiforme",
-HNSC:"Head and Neck Squamous Cell Carcinoma",
-KICH:"Kidney Chromophobe",
-KIRC:"Kidney Renal Clear Cell Carcinoma",
-KIRP:"Kidney Renal Papillary Cell Carcinoma",
-LAML:"Acute Myeloid Leukemia",
-LGG:"Brain Lower Grade Glioma",
-LIHC:"Liver Hepatocellular Carcinoma",
-LUAD:"Lung Adenocarcinoma",
-LUSC:"Lung Squamous Cell Carcinoma",
-MESO:"Mesothelioma",
-OV:"Ovarian Serous Cystadenocarcinoma",
-PAAD:"Pancreatic Adenocarcinoma",
-PANCAN:"Previous PanCancer study",
-PCPG:"Pheochromocytoma and Paraganglioma",
-PRAD:"Prostate Adenocarcinoma",
-READ:"Rectum Adenocarcinoma",
-SARC:"Sarcoma",
-SKCM:"Skin Cutaneous Melanoma",
-STAD:"Stomach Adenocarcinoma",
-TGCT:"Testicular Germ Cell Tumors",
-THCA:"Thyroid Carcinoma",
-THYM:"Thymoma",
-UCEC:"Uterine Corpus Endometrial Carcinoma",
-UCS:"Uterine Carcinosarcoma",
-UVM:"Uveal Melanoma"};
 
 function loadurl(res, data_dir){
 
@@ -140,7 +105,7 @@ function loadurl(res, data_dir){
 };
 
 
-function read_manifest(cancer_names){
+function read_manifest(){
   
   // add css
   // $('head').append('<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">');
@@ -161,15 +126,9 @@ function read_manifest(cancer_names){
       var i = 1;
       res.forEach(function(element) {
 
-        if (element.id in cancer_names){
-          var full_name = element.id + " - " + cancer_names[element.id];
-        } else {
-          var full_name = element.id;
-        };
-
         var input = $('<div>\
                           <input id="radio'+i+'" type="radio" name="toggle"/>\
-                          <label for="radio'+i+'">Cancer type: '+full_name+'</label>\
+                          <label for="radio'+i+'">Challenge: '+element.id+'</label>\
                           <div class="content">\
                             <div style= "float:left" data-id='+element.id+' toTable="true" x-label="'+x_axis_label+'" y-label="'+y_axis_label+'" class="benchmarkingChart"></div>\
                           </div>\
@@ -196,7 +155,7 @@ function read_json(res, divid, data_dir){
   var full_json = [];
   res.participants.forEach(function(name) {
     
-    let dat = $.getJSON(data_dir+"/data/"+res.id+"/" + name, function(result){
+    let dat = $.getJSON(data_dir+"/data/" + name, function(result){
       let data = result;
 
       return (data)
@@ -206,7 +165,16 @@ function read_json(res, divid, data_dir){
   });
 
   Promise.all(full_json).then(function(values) {
-    load_data_chart(values,divid)
+    var benchmark_data = [];
+    values.forEach(function (item, index) {
+      benchmark_data.push( { 
+        "toolname": item.participant_id,
+        "x":item.metrics.x.value,
+        "y":item.metrics.y.value,
+        "e":0
+      });
+    });
+    load_data_chart(benchmark_data,divid)
   });
 }
 
@@ -1266,7 +1234,7 @@ export{
 }
 
 
-read_manifest(cancer_names);
+read_manifest();
 
   
 
