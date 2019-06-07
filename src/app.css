@@ -79,7 +79,7 @@
     }
 
     .benchmarkingTable {
-        width: 17vw; 
+        width: 12vw; 
         border-collapse: collapse; 
         background-color: #f0f0f0;
         border: 5px solid black; 
@@ -91,11 +91,11 @@
     }
 
     .benchmarkingChart{
-        width: 90vw;
+        width: 80vw;
     }
 
     .benchmarkingSVG{
-        width: 68vw;
+        width: 61vw;
     }
       .axis--x {
           font-size: 12px;
