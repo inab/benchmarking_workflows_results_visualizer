@@ -11,8 +11,10 @@ import * as d3Polygon from "d3-polygon";
 
 
 let MAIN_DATA = {};
+let MAIN_METRICS = {};
 
-var cancer_names = {ALL:"All cancer types",
+// List of full challenge names : acronyms. Will be different depending on the community
+var challenge_names = {ALL:"All cancer types",
 ACC:"Adrenocortical Carcinoma",
 BLCA:"Bladder Urothelial Carcinoma",
 BRCA:"Breast Invasive Carcinoma",
@@ -140,10 +142,8 @@ function loadurl(res, data_dir){
 };
 
 
-function read_manifest(cancer_names){
+function read_manifest(challenge_names){
   
-  // add css
-  // $('head').append('<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">');
     // append accordion
   var input = $('<div class="togglebox"></div>');
   $("#custom_body").append(input);
@@ -152,8 +152,6 @@ function read_manifest(cancer_names){
   try{
     let body_cust = document.getElementById("custom_body");
     let data_dir = body_cust.getAttribute('data-dir');
-    let x_axis_label = body_cust.getAttribute('x-label');
-    let y_axis_label = body_cust.getAttribute('y-label');
 
    let participants = fetch(data_dir+"/data/Manifest.json")
     .then(response => response.json())
@@ -161,17 +159,17 @@ function read_manifest(cancer_names){
       var i = 1;
       res.forEach(function(element) {
 
-        if (element.id in cancer_names){
-          var full_name = element.id + " - " + cancer_names[element.id];
+        if (element.id in challenge_names){
+          var full_name = element.id + " - " + challenge_names[element.id];
         } else {
           var full_name = element.id;
         };
 
         var input = $('<div>\
                           <input id="radio'+i+'" type="radio" name="toggle"/>\
-                          <label for="radio'+i+'">Cancer type: '+full_name+'</label>\
+                          <label for="radio'+i+'">Challenge name: '+full_name+'</label>\
                           <div class="content">\
-                            <div style= "float:left" data-id='+element.id+' toTable="true" x-label="'+x_axis_label+'" y-label="'+y_axis_label+'" class="benchmarkingChart"></div>\
+                            <div style= "float:left" data-id='+element.id+' toTable="true" class="benchmarkingChart"></div>\
                           </div>\
                         </div>'); 
                 
@@ -194,42 +192,50 @@ function read_manifest(cancer_names){
 function read_json(res, divid, data_dir){
 
   var full_json = [];
-  res.participants.forEach(function(name) {
-    
-    let dat = $.getJSON(data_dir+"/data/"+res.id+"/" + name, function(result){
-      let data = result;
+ 
+  let dat = $.getJSON(data_dir+ "/data/" +res.id+ "/" + res.id + "_summary.json", function(result){
+    let data = result;
 
-      return (data)
+    return (data)
+  });
+  
+  dat.then(function(content){
+    // build array with every participant as a simple json object
+    content.datalink.inline_data.challenge_participants.forEach(function(element) {
+      full_json.push({
+        "toolname": element.participant_id,
+        "x": parseFloat(element.metric_x),
+        "y": parseFloat(element.metric_y),
+        "e": element.stderr_y ? parseFloat(element.stderr_y) : 0
+      });
     });
-    full_json.push(dat);
-    
+    // get name of the two metrics from the aggregation dataset
+    let metric_x_name = content.datalink.inline_data.visualization.x_axis;
+    let metric_y_name = content.datalink.inline_data.visualization.y_axis;
+    load_data_chart(full_json,divid, metric_x_name, metric_y_name)   
   });
-
-  Promise.all(full_json).then(function(values) {
-    load_data_chart(values,divid)
-  });
+     
 }
 
-function load_data_chart(full_json,divid){
+function load_data_chart(full_json,divid, metric_x_name, metric_y_name){
 
   MAIN_DATA[divid] = full_json;
+  MAIN_METRICS[divid] = [metric_x_name, metric_y_name]
   // by default, no classification method is applied. it is the first item in the selection list
   var e = document.getElementById(divid + "_dropdown_list");
   let classification_type = e.options[e.selectedIndex].id;
 
-  let metric_x = document.getElementById(divid).getAttribute('x-label');
-  let metric_y = document.getElementById(divid).getAttribute('y-label');
-
-  createChart(full_json,divid, classification_type, metric_x, metric_y);
+  createChart(full_json,divid, classification_type, metric_x_name, metric_y_name);
 }
 
-function onQuartileChange(ID, metric_x, metric_y){  
+
+function onQuartileChange(ID, metric_x_name, metric_y_name){  
   
   var chart_id = ID.split("__")[0];
   // console.log(d3.select('#'+'svg_'+chart_id));
   d3.select('#'+'svg_'+chart_id).remove();
   let classification_type = ID;
-  createChart(MAIN_DATA[chart_id],chart_id, classification_type, metric_x, metric_y);
+  createChart(MAIN_DATA[chart_id],chart_id, classification_type, MAIN_METRICS[chart_id][0], MAIN_METRICS[chart_id][1]);
 };
 
 function compute_classification(data, svg, xScale, yScale, div, width, height, removed_tools,divid, classification_type, legend_color_palette) {
@@ -334,7 +340,7 @@ function compute_chart_height(data){
   
 };
 
-function createChart (data,divid, classification_type, metric_x, metric_y){
+function createChart (data,divid, classification_type, metric_x_name, metric_y_name){
   // console.log(data)
   let margin = {top: 20, right: 40, bottom: compute_chart_height(data), left: 60},
     width = Math.round($(window).width()* 0.6818) - margin.left - margin.right,
@@ -395,7 +401,7 @@ function createChart (data,divid, classification_type, metric_x, metric_y){
   .style("text-anchor", "middle")
   .style("font-weight", "bold")
   .style("font-size", ".75vw")
-  .text(metric_x);
+  .text(metric_x_name);
 
   svg.append("text")
       .attr("transform", "rotate(-90)")
@@ -405,7 +411,7 @@ function createChart (data,divid, classification_type, metric_x, metric_y){
       .style("text-anchor", "middle")
       .style("font-weight", "bold")
       .style("font-size", ".75vw")
-      .text(metric_y ); 
+      .text(metric_y_name ); 
   
   // add pareto legend
 
@@ -466,7 +472,7 @@ function createChart (data,divid, classification_type, metric_x, metric_y){
     });
 
 
-  append_dots_errobars (svg, data, xScale, yScale, div, cValue_func, color_func,divid, metric_x, metric_y);
+  append_dots_errobars (svg, data, xScale, yScale, div, cValue_func, color_func,divid, metric_x_name, metric_y_name);
 
   draw_legend (data, svg, xScale, yScale, div, width, height, removed_tools, color_func, color_func.domain(), margin,divid,classification_type, legend_color_palette);
 
@@ -474,7 +480,7 @@ function createChart (data,divid, classification_type, metric_x, metric_y){
 
   };
 
-function append_dots_errobars (svg, data, xScale, yScale, div, cValue, color,divid, metric_x, metric_y){
+function append_dots_errobars (svg, data, xScale, yScale, div, cValue, color,divid, metric_x_name, metric_y_name){
 
   // Add Error Line
   svg.append("g").selectAll("line")
@@ -1344,12 +1350,7 @@ export{
 }
 
 
-read_manifest(cancer_names);
-
-  
-
-
-
+read_manifest(challenge_names);
 
 
 

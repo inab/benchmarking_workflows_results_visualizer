@@ -1,6 +1,6 @@
-# tcga_visualization
+# Generic OpenEBench 2D plot online visualizer
 
-Project that allows to visualize benchmarking results from the TCGA community in a *'D3.js'* chart.
+Project that allows to visualize benchmarking results in a *'D3.js'* chart coming from any OEB workflow in the official benchmarking data model format. 
 
 The sample [data](https://github.com/inab/tcga_visualization/tree/master/data) used in this visualizer has been derived from the materials of next manuscript:
 
