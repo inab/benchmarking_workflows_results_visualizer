@@ -2,7 +2,7 @@
 
 Project that allows to visualize benchmarking results in a *'D3.js'* chart coming from any OEB workflow in the official benchmarking data model format. 
 
-The sample [data](https://github.com/inab/tcga_visualization/tree/master/data) used in this visualizer has been derived from the materials of next manuscript:
+The sample [data](./data) used in this visualizer has been derived from the materials of next manuscript:
 
 [Comprehensive Characterization of Cancer Driver Genes and Mutations](https://www.cell.com/cell/fulltext/S0092-8674%2818%2930237-X?code=cell-site), Bailey et al, 2018, Cell
 
@@ -17,7 +17,7 @@ Requirements:
 
 Clone the repo to your document root :
 ```
-git clone https://github.com/inab/tcga_visualization.git
+git clone https://github.com/inab/benchmarking_workflows_results_visualizer.git
 ```
 
 Install dependencies from package.json :
