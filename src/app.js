@@ -193,7 +193,7 @@ function read_json(res, divid, data_dir){
 
   var full_json = [];
  
-  let dat = $.getJSON(data_dir+ "/data/" +res.id+ "/" + res.id + "_summary.json", function(result){
+  let dat = $.getJSON(data_dir+ "/data/" +res.id+ "/" + res.id + ".json", function(result){
     let data = result;
 
     return (data)
@@ -202,8 +202,17 @@ function read_json(res, divid, data_dir){
   dat.then(function(content){
     // build array with every participant as a simple json object
     content.datalink.inline_data.challenge_participants.forEach(function(element) {
+
+      //if participant name is too long, slice it
+      var name;
+      if (element.participant_id.length > 22){
+        name = element.participant_id.substring(0,22);
+      } else {
+        name = element.participant_id
+      }
+
       full_json.push({
-        "toolname": element.participant_id,
+        "toolname": name,
         "x": parseFloat(element.metric_x),
         "y": parseFloat(element.metric_y),
         "e": element.stderr_y ? parseFloat(element.stderr_y) : 0
@@ -340,6 +349,16 @@ function compute_chart_height(data){
   
 };
 
+function get_avg_stderr(data){
+  
+  var sum = 0;
+  data.forEach(function(element) {
+    sum = sum + element.e;
+  });
+
+  return sum/data.length
+
+}
 function createChart (data,divid, classification_type, metric_x_name, metric_y_name){
   // console.log(data)
   let margin = {top: 20, right: 40, bottom: compute_chart_height(data), left: 60},
@@ -352,9 +371,13 @@ function createChart (data,divid, classification_type, metric_x_name, metric_y_n
 
   let min_y = d3.min(data, function(d) { return d.y; });
   let max_y = d3.max(data, function(d) { return d.y; });
+
+  //the y axis domain is calculated based in the difference between the max and min, and the average stderr (BETA)
+  let proportion = get_avg_stderr(data)/(max_y-min_y);
+  
   let yScale = d3.scaleLinear()
     .range([height, 0])
-    .domain([min_y - 0.3*(max_y-min_y), max_y + 0.3*(max_y-min_y)]).nice();
+    .domain([min_y - proportion*(max_y-min_y), max_y + proportion*(max_y-min_y)]).nice();
 
   let xAxis = d3.axisBottom(xScale).ticks(12),
       yAxis = d3.axisLeft(yScale).ticks(12 * height / width);
