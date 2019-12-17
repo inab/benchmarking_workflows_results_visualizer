@@ -12,6 +12,7 @@ import * as d3Polygon from "d3-polygon";
 
 let MAIN_DATA = {};
 let MAIN_METRICS = {};
+let better = {};
 
 // List of full challenge names : acronyms. Will be different depending on the community
 var challenge_names = {ALL:"All cancer types",
@@ -156,7 +157,7 @@ function read_manifest(challenge_names){
    let participants = fetch(data_dir+"/data/Manifest.json")
     .then(response => response.json())
     .then(res => {
-      var i = 1;
+      var i = 0;
       res.forEach(function(element) {
 
         if (element.id in challenge_names){
@@ -203,6 +204,7 @@ function read_json(res, divid, data_dir){
     // build array with every participant as a simple json object
     content.datalink.inline_data.challenge_participants.forEach(function(element) {
 
+    better[divid] = content.datalink.inline_data.visualization.optimization;
       //if participant name is too long, slice it
       var name;
       if (element.participant_id.length > 22){
@@ -256,24 +258,23 @@ function compute_classification(data, svg, xScale, yScale, div, width, height, r
     transform_to_table = true;
   };
 
-  let better = "top-right";
   // append optimization arrow
-  add_arrow(divid, svg, xScale, yScale, better);
+  add_arrow(divid, svg, xScale, yScale, better[divid]);
 
   if (classification_type == ( divid + "__squares")) {
-    draw_pareto(data, svg, xScale, yScale, div, width, height, removed_tools,divid, better);
-    get_square_quartiles(data, svg, xScale, yScale, div, removed_tools,better,divid, transform_to_table, legend_color_palette);
-    append_quartile_numbers_to_plot (svg, xScale, yScale, better,divid);
+    draw_pareto(data, svg, xScale, yScale, div, width, height, removed_tools,divid, better[divid]);
+    get_square_quartiles(data, svg, xScale, yScale, div, removed_tools,better[divid],divid, transform_to_table, legend_color_palette);
+    append_quartile_numbers_to_plot (svg, xScale, yScale, better[divid],divid);
   }  
   else if (classification_type == (divid + "__diagonals")) {
-    draw_pareto(data, svg, xScale, yScale, div, width, height, removed_tools,divid, better);
-    get_diagonal_quartiles(data, svg, xScale, yScale, div, width, height, removed_tools, better,divid, transform_to_table, legend_color_palette);
+    draw_pareto(data, svg, xScale, yScale, div, width, height, removed_tools,divid, better[divid]);
+    get_diagonal_quartiles(data, svg, xScale, yScale, div, width, height, removed_tools, better[divid],divid, transform_to_table, legend_color_palette);
   } 
   else if (classification_type == (divid + "__clusters")) {
-    draw_pareto(data, svg, xScale, yScale, div, width, height, removed_tools,divid, better);
-    get_clusters(data, svg, xScale, yScale, div, width, height, removed_tools, better,divid, transform_to_table, legend_color_palette);
+    draw_pareto(data, svg, xScale, yScale, div, width, height, removed_tools,divid, better[divid]);
+    get_clusters(data, svg, xScale, yScale, div, width, height, removed_tools, better[divid],divid, transform_to_table, legend_color_palette);
   } else {
-    draw_pareto(data, svg, xScale, yScale, div, width, height, removed_tools,divid, better);
+    draw_pareto(data, svg, xScale, yScale, div, width, height, removed_tools,divid, better[divid]);
   }
   
 };
