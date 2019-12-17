@@ -203,8 +203,12 @@ function read_json(res, divid, data_dir){
   dat.then(function(content){
     // build array with every participant as a simple json object
     content.datalink.inline_data.challenge_participants.forEach(function(element) {
-
-    better[divid] = content.datalink.inline_data.visualization.optimization;
+    
+    if (content.datalink.inline_data.visualization.optimization != null){ 
+      better[divid] = content.datalink.inline_data.visualization.optimization;
+    } else {
+      better[divid] = "top-right";
+    }
       //if participant name is too long, slice it
       var name;
       if (element.participant_id.length > 22){
