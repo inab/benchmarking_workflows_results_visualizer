@@ -131,16 +131,10 @@
                     "participant_id": "SonicParanoid_most",
                     "stderr_x": 205.07706,
                     "stderr_y": 0.013243563
-                },
-                {
-                    "metric_x": 13494,
-                    "metric_y": 0.28388889,
-                    "participant_id": "MY_ORTHOLOG_PREDICTOR",
-                    "stderr_x": 194.54656,
-                    "stderr_y": 0.013084757
                 }
             ],
             "visualization": {
+                "optimization": "bottom-right",
                 "type": "2D-plot",
                 "x_axis": "NR_COMPLETED_TREE_SAMPLINGS",
                 "y_axis": "RF_DISTANCE"

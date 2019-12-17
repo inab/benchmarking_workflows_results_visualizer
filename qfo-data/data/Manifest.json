@@ -19,8 +19,7 @@
             "PANTHER_14.1_LDO_only",
             "RSD",
             "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
+            "SonicParanoid_most"
         ]
     },
     {
@@ -43,8 +42,7 @@
             "PANTHER_14.1_LDO_only",
             "RSD",
             "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
+            "SonicParanoid_most"
         ]
     },
     {
@@ -67,128 +65,7 @@
             "PANTHER_14.1_LDO_only",
             "RSD",
             "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
-        ]
-    },
-    {
-        "id": "GO",
-        "participants": [
-            "OMA_Groups",
-            "BBH",
-            "Ensembl_Compara",
-            "Hieranoid2",
-            "InParanoid",
-            "OMA_GETHOGs_2.0",
-            "OMA_Groups_2.0",
-            "OMA_Pairs_2.0",
-            "OrthoFinder_2_BLAST__DendroBLAST_",
-            "OrthoFinder_2_BLAST__MSA",
-            "OrthoFinder_2_Defaults_DIAMOND__MSA",
-            "OrthoFinder_2_DIAMOND__MSA",
-            "OrthoInspector_3.0",
-            "PANTHER_14.1_all",
-            "PANTHER_14.1_LDO_only",
-            "RSD",
-            "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
-        ]
-    },
-    {
-        "id": "G_STD2_Luca",
-        "participants": [
-            "OMA_Groups",
-            "BBH",
-            "Ensembl_Compara",
-            "Hieranoid2",
-            "InParanoid",
-            "OMA_GETHOGs_2.0",
-            "OMA_Groups_2.0",
-            "OMA_Pairs_2.0",
-            "OrthoFinder_2_BLAST__DendroBLAST_",
-            "OrthoFinder_2_BLAST__MSA",
-            "OrthoFinder_2_Defaults_DIAMOND__MSA",
-            "OrthoFinder_2_DIAMOND__MSA",
-            "OrthoInspector_3.0",
-            "PANTHER_14.1_all",
-            "PANTHER_14.1_LDO_only",
-            "RSD",
-            "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
-        ]
-    },
-    {
-        "id": "G_STD_Fungi",
-        "participants": [
-            "OMA_Groups",
-            "BBH",
-            "Ensembl_Compara",
-            "Hieranoid2",
-            "InParanoid",
-            "OMA_GETHOGs_2.0",
-            "OMA_Groups_2.0",
-            "OMA_Pairs_2.0",
-            "OrthoFinder_2_BLAST__DendroBLAST_",
-            "OrthoFinder_2_BLAST__MSA",
-            "OrthoFinder_2_Defaults_DIAMOND__MSA",
-            "OrthoFinder_2_DIAMOND__MSA",
-            "OrthoInspector_3.0",
-            "PANTHER_14.1_all",
-            "PANTHER_14.1_LDO_only",
-            "RSD",
-            "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
-        ]
-    },
-    {
-        "id": "G_STD_Luca",
-        "participants": [
-            "OMA_Groups",
-            "BBH",
-            "Ensembl_Compara",
-            "Hieranoid2",
-            "InParanoid",
-            "OMA_GETHOGs_2.0",
-            "OMA_Groups_2.0",
-            "OMA_Pairs_2.0",
-            "OrthoFinder_2_BLAST__DendroBLAST_",
-            "OrthoFinder_2_BLAST__MSA",
-            "OrthoFinder_2_Defaults_DIAMOND__MSA",
-            "OrthoFinder_2_DIAMOND__MSA",
-            "OrthoInspector_3.0",
-            "PANTHER_14.1_all",
-            "PANTHER_14.1_LDO_only",
-            "RSD",
-            "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
-        ]
-    },
-    {
-        "id": "G_STD2_Fungi",
-        "participants": [
-            "OMA_Groups",
-            "BBH",
-            "Ensembl_Compara",
-            "Hieranoid2",
-            "InParanoid",
-            "OMA_GETHOGs_2.0",
-            "OMA_Groups_2.0",
-            "OMA_Pairs_2.0",
-            "OrthoFinder_2_BLAST__DendroBLAST_",
-            "OrthoFinder_2_BLAST__MSA",
-            "OrthoFinder_2_Defaults_DIAMOND__MSA",
-            "OrthoFinder_2_DIAMOND__MSA",
-            "OrthoInspector_3.0",
-            "PANTHER_14.1_all",
-            "PANTHER_14.1_LDO_only",
-            "RSD",
-            "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
+            "SonicParanoid_most"
         ]
     },
     {
@@ -211,12 +88,11 @@
             "PANTHER_14.1_LDO_only",
             "RSD",
             "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
+            "SonicParanoid_most"
         ]
     },
     {
-        "id": "G_STD_Vertebrata",
+        "id": "GO",
         "participants": [
             "OMA_Groups",
             "BBH",
@@ -235,12 +111,11 @@
             "PANTHER_14.1_LDO_only",
             "RSD",
             "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
+            "SonicParanoid_most"
         ]
     },
     {
-        "id": "G_STD2_Vertebrata",
+        "id": "G_STD2_Luca",
         "participants": [
             "OMA_Groups",
             "BBH",
@@ -259,12 +134,11 @@
             "PANTHER_14.1_LDO_only",
             "RSD",
             "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
+            "SonicParanoid_most"
         ]
     },
     {
-        "id": "G_STD2_Eukaryota",
+        "id": "G_STD_Luca",
         "participants": [
             "OMA_Groups",
             "BBH",
@@ -283,8 +157,30 @@
             "PANTHER_14.1_LDO_only",
             "RSD",
             "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
+            "SonicParanoid_most"
+        ]
+    },
+    {
+        "id": "G_STD2_Fungi",
+        "participants": [
+            "OMA_Groups",
+            "BBH",
+            "Ensembl_Compara",
+            "Hieranoid2",
+            "InParanoid",
+            "OMA_GETHOGs_2.0",
+            "OMA_Groups_2.0",
+            "OMA_Pairs_2.0",
+            "OrthoFinder_2_BLAST__DendroBLAST_",
+            "OrthoFinder_2_BLAST__MSA",
+            "OrthoFinder_2_Defaults_DIAMOND__MSA",
+            "OrthoFinder_2_DIAMOND__MSA",
+            "OrthoInspector_3.0",
+            "PANTHER_14.1_all",
+            "PANTHER_14.1_LDO_only",
+            "RSD",
+            "SonicParanoid_default",
+            "SonicParanoid_most"
         ]
     },
     {
@@ -307,8 +203,99 @@
             "PANTHER_14.1_LDO_only",
             "RSD",
             "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
+            "SonicParanoid_most"
+        ]
+    },
+    {
+        "id": "G_STD2_Eukaryota",
+        "participants": [
+            "OMA_Groups",
+            "BBH",
+            "Ensembl_Compara",
+            "Hieranoid2",
+            "InParanoid",
+            "OMA_GETHOGs_2.0",
+            "OMA_Groups_2.0",
+            "OMA_Pairs_2.0",
+            "OrthoFinder_2_BLAST__DendroBLAST_",
+            "OrthoFinder_2_BLAST__MSA",
+            "OrthoFinder_2_Defaults_DIAMOND__MSA",
+            "OrthoFinder_2_DIAMOND__MSA",
+            "OrthoInspector_3.0",
+            "PANTHER_14.1_all",
+            "PANTHER_14.1_LDO_only",
+            "RSD",
+            "SonicParanoid_default",
+            "SonicParanoid_most"
+        ]
+    },
+    {
+        "id": "G_STD2_Vertebrata",
+        "participants": [
+            "OMA_Groups",
+            "BBH",
+            "Ensembl_Compara",
+            "Hieranoid2",
+            "InParanoid",
+            "OMA_GETHOGs_2.0",
+            "OMA_Groups_2.0",
+            "OMA_Pairs_2.0",
+            "OrthoFinder_2_BLAST__DendroBLAST_",
+            "OrthoFinder_2_BLAST__MSA",
+            "OrthoFinder_2_Defaults_DIAMOND__MSA",
+            "OrthoFinder_2_DIAMOND__MSA",
+            "OrthoInspector_3.0",
+            "PANTHER_14.1_all",
+            "PANTHER_14.1_LDO_only",
+            "RSD",
+            "SonicParanoid_default",
+            "SonicParanoid_most"
+        ]
+    },
+    {
+        "id": "G_STD_Fungi",
+        "participants": [
+            "OMA_Groups",
+            "BBH",
+            "Ensembl_Compara",
+            "Hieranoid2",
+            "InParanoid",
+            "OMA_GETHOGs_2.0",
+            "OMA_Groups_2.0",
+            "OMA_Pairs_2.0",
+            "OrthoFinder_2_BLAST__DendroBLAST_",
+            "OrthoFinder_2_BLAST__MSA",
+            "OrthoFinder_2_Defaults_DIAMOND__MSA",
+            "OrthoFinder_2_DIAMOND__MSA",
+            "OrthoInspector_3.0",
+            "PANTHER_14.1_all",
+            "PANTHER_14.1_LDO_only",
+            "RSD",
+            "SonicParanoid_default",
+            "SonicParanoid_most"
+        ]
+    },
+    {
+        "id": "G_STD_Vertebrata",
+        "participants": [
+            "OMA_Groups",
+            "BBH",
+            "Ensembl_Compara",
+            "Hieranoid2",
+            "InParanoid",
+            "OMA_GETHOGs_2.0",
+            "OMA_Groups_2.0",
+            "OMA_Pairs_2.0",
+            "OrthoFinder_2_BLAST__DendroBLAST_",
+            "OrthoFinder_2_BLAST__MSA",
+            "OrthoFinder_2_Defaults_DIAMOND__MSA",
+            "OrthoFinder_2_DIAMOND__MSA",
+            "OrthoInspector_3.0",
+            "PANTHER_14.1_all",
+            "PANTHER_14.1_LDO_only",
+            "RSD",
+            "SonicParanoid_default",
+            "SonicParanoid_most"
         ]
     },
     {
@@ -331,8 +318,7 @@
             "PANTHER_14.1_LDO_only",
             "RSD",
             "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
+            "SonicParanoid_most"
         ]
     },
     {
@@ -355,8 +341,7 @@
             "PANTHER_14.1_LDO_only",
             "RSD",
             "SonicParanoid_default",
-            "SonicParanoid_most",
-            "MY_ORTHOLOG_PREDICTOR"
+            "SonicParanoid_most"
         ]
     }
 ]

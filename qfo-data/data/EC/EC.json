@@ -131,16 +131,10 @@
                     "participant_id": "SonicParanoid_most",
                     "stderr_x": 0,
                     "stderr_y": 0.00085472159
-                },
-                {
-                    "metric_x": 189541,
-                    "metric_y": 0.91999452,
-                    "participant_id": "MY_ORTHOLOG_PREDICTOR",
-                    "stderr_x": 0,
-                    "stderr_y": 0.00085496083
                 }
             ],
             "visualization": {
+                "optimization": "top-right",
                 "type": "2D-plot",
                 "x_axis": "NR_ORTHOLOGS",
                 "y_axis": "avg Schlicker"
