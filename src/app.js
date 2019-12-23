@@ -49,7 +49,23 @@ THCA:"Thyroid Carcinoma",
 THYM:"Thymoma",
 UCEC:"Uterine Corpus Endometrial Carcinoma",
 UCS:"Uterine Carcinosarcoma",
-UVM:"Uveal Melanoma"};
+UVM:"Uveal Melanoma",
+"GO":"Gene Ontology conservation test",
+"EC":"Enzyme Classification (EC) conservation test",
+"SwissTrees":"Agreement with Reference Gene Phylogenies: SwissTree",
+"TreeFam-A":"Agreement with Reference Gene Phylogenies: TreeFam-A",
+"STD_Eukaryota":"Species Tree Discordance Benchmark - Eukaryota",
+"STD_Fungi":"Species Tree Discordance Benchmark - Fungi",
+"STD_Bacteria":"Species Tree Discordance Benchmark - Bacteria",
+"G_STD_Luca":"Generalized Species Tree Discordance Benchmark - Luca",
+"G_STD_Eukaryota":"Generalized Species Tree Discordance Benchmark - Eukaryota",
+"G_STD_Vertebrata":"Generalized Species Tree Discordance Benchmark - Vertebrata",
+"G_STD_Fungi":"Generalized Species Tree Discordance Benchmark - Fungi",
+"G_STD2_Luca":"Generalized Species Tree Discordance Benchmark (Variant 2) - Luca",
+"G_STD2_Fungi":"Generalized Species Tree Discordance Benchmark (Variant 2) - Fungi",
+"G_STD2_Eukaryota":"Generalized Species Tree Discordance Benchmark (Variant 2) - Eukaryota",
+"G_STD2_Vertebrata":"Generalized Species Tree Discordance Benchmark (Variant 2) - Vertebrata"
+};
 
 function loadurl(res, data_dir){
 
