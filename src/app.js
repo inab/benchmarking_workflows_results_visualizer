@@ -237,7 +237,8 @@ function read_json(res, divid, data_dir){
         "toolname": name,
         "x": parseFloat(element.metric_x),
         "y": parseFloat(element.metric_y),
-        "e": element.stderr_y ? parseFloat(element.stderr_y) : 0
+        "e_x": element.stderr_x ? parseFloat(element.stderr_x) : 0,
+        "e_y": element.stderr_y ? parseFloat(element.stderr_y) : 0
       });
     });
     // get name of the two metrics from the aggregation dataset
@@ -370,31 +371,43 @@ function compute_chart_height(data){
   
 };
 
-function get_avg_stderr(data){
-  
+function get_avg_stderr(data, axis){
+
   var sum = 0;
+
   data.forEach(function(element) {
-    sum = sum + element.e;
+    if (axis == "y"){
+      sum = sum + element.e_y;
+    } else if (axis == "x"){
+      sum = sum + element.e_x;
+    }
   });
 
   return sum/data.length
 
 }
+
 function createChart (data,divid, classification_type, metric_x_name, metric_y_name){
   // console.log(data)
   let margin = {top: 20, right: 40, bottom: compute_chart_height(data), left: 60},
     width = Math.round($(window).width()* 0.6818) - margin.left - margin.right,
     height = Math.round($(window).height()* 0.5787037) - margin.top - margin.bottom;
 
+  let min_x = d3.min(data, function(d) { return d.x; });
+  let max_x = d3.max(data, function(d) { return d.x; });
+
+  //the x axis domain is calculated based in the difference between the max and min, and the average stderr (BETA)
+  var proportion = get_avg_stderr(data, "x")/(max_x-min_x);
+
   let xScale = d3.scaleLinear()
     .range([0, width])
-    .domain([d3.min(data, function(d) { return d.x; }), d3.max(data, function(d) { return d.x; })]).nice();
+    .domain([min_x - proportion*(max_x-min_x), max_x + proportion*(max_x-min_x)]).nice();
 
   let min_y = d3.min(data, function(d) { return d.y; });
   let max_y = d3.max(data, function(d) { return d.y; });
 
   //the y axis domain is calculated based in the difference between the max and min, and the average stderr (BETA)
-  let proportion = get_avg_stderr(data)/(max_y-min_y);
+  proportion = get_avg_stderr(data, "y")/(max_y-min_y);
   
   let yScale = d3.scaleLinear()
     .range([height, 0])
@@ -536,14 +549,33 @@ function append_dots_errobars (svg, data, xScale, yScale, div, cValue, color,div
         return xScale(d.x);
       })
       .attr("y1", function(d) {
-        return yScale(d.y + d.e);
+        return yScale(d.y + d.e_y);
       })
       .attr("x2", function(d) {
         return xScale(d.x);
       })
       .attr("y2", function(d) {
-        return yScale(d.y - d.e);
+        return yScale(d.y - d.e_y);
       });
+    
+    // Add X Axis Error Line
+    svg.append("g").selectAll("line")
+    .data(data).enter()
+    .append("line")
+    .attr("class", "error-line")
+    .attr("id", function (d) { return divid+"___lineX"+d.toolname.replace(/[\. ()/-]/g, "_");})
+    .attr("x1", function(d) {
+      return xScale(d.x - d.e_x);
+    })
+    .attr("y1", function(d) {
+      return yScale(d.y);
+    })
+    .attr("x2", function(d) {
+      return xScale(d.x + d.e_x);
+    })
+    .attr("y2", function(d) {
+      return yScale(d.y);
+    });
 
   // Add Error Top Cap
   svg.append("g").selectAll("line")
@@ -555,13 +587,13 @@ function append_dots_errobars (svg, data, xScale, yScale, div, cValue, color,div
         return xScale(d.x) - 4;
       })
       .attr("y1", function(d) {
-        return yScale(d.y + d.e);
+        return yScale(d.y + d.e_y);
       })
       .attr("x2", function(d) {
         return xScale(d.x) + 4;
       })
       .attr("y2", function(d) {
-        return yScale(d.y + d.e);
+        return yScale(d.y + d.e_y);
       });
 
   // Add Error Bottom Cap
@@ -574,14 +606,52 @@ function append_dots_errobars (svg, data, xScale, yScale, div, cValue, color,div
         return xScale(d.x) - 4;
       })
       .attr("y1", function(d) {
-        return yScale(d.y - d.e);
+        return yScale(d.y - d.e_y);
       })
       .attr("x2", function(d) {
         return xScale(d.x) + 4;
       })
       .attr("y2", function(d) {
-        return yScale(d.y - d.e);
+        return yScale(d.y - d.e_y);
       });
+
+    // add right error cap
+    svg.append("g").selectAll("line")
+    .data(data).enter()
+    .append("line")
+    .attr("class", "error-cap")
+    .attr("id", function (d) { return divid+"___right"+d.toolname.replace(/[\. ()/-]/g, "_");})
+    .attr("x1", function(d) {
+      return xScale(d.x + d.e_x);
+    })
+    .attr("y1", function(d) {
+      return yScale(d.y) - 4;
+    })
+    .attr("x2", function(d) {
+      return xScale(d.x + d.e_x);
+    })
+    .attr("y2", function(d) {
+      return yScale(d.y) + 4;
+    });
+
+  // add left error cap
+  svg.append("g").selectAll("line")
+    .data(data).enter()
+    .append("line")
+    .attr("class", "error-cap")
+    .attr("id", function (d) { return divid+"___left"+d.toolname.replace(/[\. ()/-]/g, "_");})
+    .attr("x1", function(d) {
+      return xScale(d.x - d.e_x);
+    })
+    .attr("y1", function(d) {
+      return yScale(d.y) - 4;
+    })
+    .attr("x2", function(d) {
+      return xScale(d.x - d.e_x);
+    })
+    .attr("y2", function(d) {
+      return yScale(d.y) + 4;
+    });
 
   // add dots
   let symbol = d3.symbol();
@@ -773,6 +843,9 @@ function show_or_hide_participant_in_plot (ID, data, svg, xScale, yScale, div, w
     d3.select("#"+divid+"___top"+tool_id).style("opacity", 1);
     d3.select("#"+divid+"___bottom"+tool_id).style("opacity", 1);
     d3.select("#"+divid+"___line"+tool_id).style("opacity", 1);
+    d3.select("#"+divid+"___lineX"+tool_id).style("opacity", 1);
+    d3.select("#"+divid+"___right"+tool_id).style("opacity", 1);
+    d3.select("#"+divid+"___left"+tool_id).style("opacity", 1);
     // recalculate the quartiles after removing the tools
     let index = $.inArray(tool_id.replace(/_/g, "-"), removed_tools);
     removed_tools.splice(index, 1);
@@ -786,6 +859,9 @@ function show_or_hide_participant_in_plot (ID, data, svg, xScale, yScale, div, w
     d3.select("#"+divid+"___top"+tool_id).style("opacity", 0);
     d3.select("#"+divid+"___bottom"+tool_id).style("opacity", 0);
     d3.select("#"+divid+"___line"+tool_id).style("opacity", 0);
+    d3.select("#"+divid+"___lineX"+tool_id).style("opacity", 0);
+    d3.select("#"+divid+"___right"+tool_id).style("opacity", 0);
+    d3.select("#"+divid+"___left"+tool_id).style("opacity", 0);
     removed_tools.push(tool_id.replace(/_/g, "-"));
     compute_classification(data, svg, xScale, yScale, div, width, height, removed_tools,divid,classification_type, legend_color_palette);
     //change the legend opacity to keep track of hidden tools
