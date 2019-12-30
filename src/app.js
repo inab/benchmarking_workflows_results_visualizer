@@ -413,7 +413,7 @@ function createChart (data,divid, classification_type, metric_x_name, metric_y_n
     .range([height, 0])
     .domain([min_y - proportion*(max_y-min_y), max_y + proportion*(max_y-min_y)]).nice();
 
-  let xAxis = d3.axisBottom(xScale).ticks(12),
+  let xAxis = d3.axisBottom(xScale).ticks(12 * height / width),
       yAxis = d3.axisLeft(yScale).ticks(12 * height / width);
 
   let line = d3.line()
@@ -495,7 +495,7 @@ function createChart (data,divid, classification_type, metric_x_name, metric_y_n
 
   // add X and Y Gridlines
   var gridlines_x = d3.axisBottom()
-                    .ticks(12)
+                    .ticks(12 * height / width)
                     .tickFormat("")
                     .tickSize(height)
                     .scale(xScale);
