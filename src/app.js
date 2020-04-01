@@ -7,6 +7,7 @@ import * as d3Polygon from "d3-polygon";
 
 
 
+
 // ./node_modules/.bin/webpack-cli src/app.js --output=build/build.js -d -w
 
 
@@ -67,7 +68,7 @@ UVM:"Uveal Melanoma",
 "G_STD2_Vertebrata":"Generalized Species Tree Discordance Benchmark (Variant 2) - Vertebrata"
 };
 
-function loadurl(res, data_dir){
+function loadurl(data_dir){
 
 
     let divid;
@@ -77,10 +78,11 @@ function loadurl(res, data_dir){
     let i = 0;
     let dataId;
     let y;
-    
+
     // append ids to chart/s and make d3 plot
     i = 0
     for(y of charts){
+
       // get benchmarking event id
       dataId = y.getAttribute('data-id');
       //set chart id
@@ -140,7 +142,7 @@ function loadurl(res, data_dir){
         .text("K-MEANS CLUSTERING")
 
      
-      read_json(res[i],divid, data_dir) 
+      read_jsons(dataId,divid, data_dir) 
 
 
       //check the transformation to table attribute and append table to html
@@ -159,7 +161,7 @@ function loadurl(res, data_dir){
 };
 
 
-function read_manifest(challenge_names){
+function run_visualizer(challenge_names){
   
     // append accordion
   var input = $('<div class="togglebox"></div>');
@@ -167,38 +169,11 @@ function read_manifest(challenge_names){
   
 
   try{
-    let body_cust = document.getElementById("custom_body");
-    let data_dir = body_cust.getAttribute('data-dir');
 
-   let participants = fetch(data_dir+"/data/Manifest.json")
-    .then(response => response.json())
-    .then(res => {
-      var i = 0;
-      res.forEach(function(element) {
+    let data_dir = $('#custom_body').data("dir")
 
-        if (element.id in challenge_names){
-          var full_name = element.id + " - " + challenge_names[element.id];
-        } else {
-          var full_name = element.id;
-        };
+    build_accordion(data_dir, challenge_names)
 
-        var input = $('<div>\
-                          <input id="radio'+i+'" type="radio" name="toggle"/>\
-                          <label for="radio'+i+'">Challenge name: '+full_name+'</label>\
-                          <div class="content">\
-                            <div style= "float:left" data-id='+element.id+' toTable="true" class="benchmarkingChart"></div>\
-                          </div>\
-                        </div>'); 
-                
-        $(".togglebox").append(input);
-
-      i++;
-      });
-        
-      loadurl(res, data_dir);
-
-    })
-    
   }catch(err){
     console.log(`Invalid Url Error: ${err.stack} `);
   }
@@ -206,51 +181,117 @@ function read_manifest(challenge_names){
     
 };
 
-function read_json(res, divid, data_dir){
+
+async function read_manifest(run_dir){
+
+  let response = await fetch(run_dir+"/Manifest.json");
+  let res = await response.json();
+
+  return res
+}
+
+async function build_accordion(data_dir, challenge_names){
+
+  var accordion_challenges =[]; // this var will store the ids of challenges that are already in the accordion
+
+  // loop over all the directories passed to the div and read manifest
+  for (const run_dir of data_dir) {
+
+    let res =  await read_manifest(run_dir);  
+      var i = 0;
+      for (const element of res) {
+        // append new challenge to accordion, if it is not already there
+        if (accordion_challenges.includes(element.id) == false){
+  
+          if (element.id in challenge_names){
+            var full_name = element.id + " - " + challenge_names[element.id];
+          } else {
+            var full_name = element.id;
+          };
+
+          var input = $('<div>\
+                            <input id="radio_' + element.id + +i+'" type="radio" name="toggle"/>\
+                            <label for="radio_' + element.id + +i+'">Challenge name: '+full_name+'</label>\
+                            <div class="content">\
+                              <div style= "float:left" data-id='+element.id+' toTable="true" class="benchmarkingChart"></div>\
+                            </div>\
+                          </div>'); 
+                  
+          $(".togglebox").append(input);
+  
+        i++;
+        accordion_challenges.push(element.id)
+      }
+      };
+   
+    
+  };
+
+  loadurl(data_dir);
+
+}
+async function read_jsons(dataId, divid, data_dir){
 
   var full_json = [];
+  var metric_x_name;
+  var metric_y_name;
  
-  let dat = $.getJSON(data_dir+ "/data/" +res.id+ "/" + res.id + ".json", function(result){
-    let data = result;
+  // look for challenge data in all dir runs
 
-    return (data)
-  });
-  
-  dat.then(function(content){
-    // build array with every participant as a simple json object
-    content.datalink.inline_data.challenge_participants.forEach(function(element) {
-    
-    if (content.datalink.inline_data.visualization.optimization != null){ 
-      better[divid] = content.datalink.inline_data.visualization.optimization;
-    } else {
-      better[divid] = "top-right";
-    }
-      //if participant name is too long, slice it
-      var name;
-      if (element.participant_id.length > 22){
-        name = element.participant_id.substring(0,22);
-      } else {
-        name = element.participant_id
-      }
+      for (const run_dir of data_dir) {
+        let content = await $.getJSON(run_dir + "/" + dataId+ "/" + dataId + ".json").fail(function() { return; });
 
-      full_json.push({
-        "toolname": name,
-        "x": parseFloat(element.metric_x),
-        "y": parseFloat(element.metric_y),
-        "e_x": element.stderr_x ? parseFloat(element.stderr_x) : 0,
-        "e_y": element.stderr_y ? parseFloat(element.stderr_y) : 0
+        // get name of the two metrics from the aggregation dataset
+        metric_x_name = content.datalink.inline_data.visualization.x_axis;
+        metric_y_name = content.datalink.inline_data.visualization.y_axis;
+
+        // build array with every participant as a simple json object
+        content.datalink.inline_data.challenge_participants.forEach(function(element) {
+        
+        if (content.datalink.inline_data.visualization.optimization != null){ 
+          better[divid] = content.datalink.inline_data.visualization.optimization;
+        } else {
+          better[divid] = "top-right";
+        }
+          //if participant name is too long, slice it
+          var name;
+          if (element.participant_id.length > 22){
+            name = element.participant_id.substring(0,22);
+          } else {
+            name = element.participant_id
+          }
+        
+        //only add participant to final json if it is not already there
+        // due to the multi run combinations...participants could be added more than once
+        let found;
+        full_json.forEach(function(tool){
+          if (tool.toolname == name) {
+              found = true;
+          }
+        });
+        
+        if (found != true){
+          full_json.push({
+            "toolname": name,
+            "x": parseFloat(element.metric_x),
+            "y": parseFloat(element.metric_y),
+            "e_x": element.stderr_x ? parseFloat(element.stderr_x) : 0,
+            "e_y": element.stderr_y ? parseFloat(element.stderr_y) : 0
+          });
+        }
+
+        
       });
-    });
-    // get name of the two metrics from the aggregation dataset
-    let metric_x_name = content.datalink.inline_data.visualization.x_axis;
-    let metric_y_name = content.datalink.inline_data.visualization.y_axis;
+
+      
+    };
+
     load_data_chart(full_json,divid, metric_x_name, metric_y_name)   
-  });
      
 }
 
 function load_data_chart(full_json,divid, metric_x_name, metric_y_name){
-
+  console.log(full_json)
   MAIN_DATA[divid] = full_json;
   MAIN_METRICS[divid] = [metric_x_name, metric_y_name]
   // by default, no classification method is applied. it is the first item in the selection list
@@ -1470,7 +1511,7 @@ export{
 }
 
 
-read_manifest(challenge_names);
+run_visualizer(challenge_names);
 
 
 
