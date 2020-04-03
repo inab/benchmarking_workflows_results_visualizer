@@ -170,7 +170,7 @@ function read_manifest(challenge_names){
     let body_cust = document.getElementById("custom_body");
     let data_dir = body_cust.getAttribute('data-dir');
 
-   let participants = fetch(data_dir+"/data/Manifest.json")
+   let participants = fetch(data_dir+"/Manifest.json")
     .then(response => response.json())
     .then(res => {
       var i = 0;
@@ -210,7 +210,7 @@ function read_json(res, divid, data_dir){
 
   var full_json = [];
  
-  let dat = $.getJSON(data_dir+ "/data/" +res.id+ "/" + res.id + ".json", function(result){
+  let dat = $.getJSON(data_dir+ "/" +res.id+ "/" + res.id + ".json", function(result){
     let data = result;
 
     return (data)
