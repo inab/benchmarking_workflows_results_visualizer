@@ -239,51 +239,56 @@ async function read_jsons(dataId, divid, data_dir){
   // look for challenge data in all dir runs
 
       for (const run_dir of data_dir) {
-        let content = await $.getJSON(run_dir + "/" + dataId+ "/" + dataId + ".json").fail(function() { return; });
 
-        // get name of the two metrics from the aggregation dataset
-        metric_x_name = content.datalink.inline_data.visualization.x_axis;
-        metric_y_name = content.datalink.inline_data.visualization.y_axis;
+        try {
+          let content = await $.getJSON(run_dir + "/" + dataId+ "/" + dataId + ".json")
 
-        // build array with every participant as a simple json object
-        content.datalink.inline_data.challenge_participants.forEach(function(element) {
-        
-        if (content.datalink.inline_data.visualization.optimization != null){ 
-          better[divid] = content.datalink.inline_data.visualization.optimization;
-        } else {
-          better[divid] = "top-right";
-        }
-          //if participant name is too long, slice it
-          var name;
-          if (element.participant_id.length > 22){
-            name = element.participant_id.substring(0,22);
+          metric_x_name = content.datalink.inline_data.visualization.x_axis;
+          metric_y_name = content.datalink.inline_data.visualization.y_axis;
+
+          // build array with every participant as a simple json object
+          content.datalink.inline_data.challenge_participants.forEach(function(element) {
+          
+          if (content.datalink.inline_data.visualization.optimization != null){ 
+            better[divid] = content.datalink.inline_data.visualization.optimization;
           } else {
-            name = element.participant_id
+            better[divid] = "top-right";
           }
-        
-        //only add participant to final json if it is not already there
-        // due to the multi run combinations...participants could be added more than once
-        let found;
-        full_json.forEach(function(tool){
-          if (tool.toolname == name) {
-              found = true;
-          }
-        });
-        
-        if (found != true){
-          full_json.push({
-            "toolname": name,
-            "x": parseFloat(element.metric_x),
-            "y": parseFloat(element.metric_y),
-            "e_x": element.stderr_x ? parseFloat(element.stderr_x) : 0,
-            "e_y": element.stderr_y ? parseFloat(element.stderr_y) : 0
+            //if participant name is too long, slice it
+            var name;
+            if (element.participant_id.length > 22){
+              name = element.participant_id.substring(0,22);
+            } else {
+              name = element.participant_id
+            }
+          
+          //only add participant to final json if it is not already there
+          // due to the multi run combinations...participants could be added more than once
+          let found;
+          full_json.forEach(function(tool){
+            if (tool.toolname == name) {
+                found = true;
+            }
           });
+          
+          if (found != true){
+            full_json.push({
+              "toolname": name,
+              "x": parseFloat(element.metric_x),
+              "y": parseFloat(element.metric_y),
+              "e_x": element.stderr_x ? parseFloat(element.stderr_x) : 0,
+              "e_y": element.stderr_y ? parseFloat(element.stderr_y) : 0
+            });
+          }
+
+          
+        });
+        } catch { // if not found, skip to next directory
+
+          continue;
+          
         }
-
-        
-      });
-
-      
+    
     };
 
     load_data_chart(full_json,divid, metric_x_name, metric_y_name)   
@@ -291,7 +296,7 @@ async function read_jsons(dataId, divid, data_dir){
 }
 
 function load_data_chart(full_json,divid, metric_x_name, metric_y_name){
-  console.log(full_json)
+
   MAIN_DATA[divid] = full_json;
   MAIN_METRICS[divid] = [metric_x_name, metric_y_name]
   // by default, no classification method is applied. it is the first item in the selection list
@@ -467,7 +472,7 @@ function createChart (data,divid, classification_type, metric_x_name, metric_y_n
 
   // Define the div for the tooltip
 
-  let div = d3.select('#'+divid).append("div").attr("class", "benchmark_tooltip").style("opacity", 0);
+  let div = d3.select('body').append("div").attr("class", "benchmark_tooltip").style("opacity", 0);
 
   // append the svg element
   // d3.select("svg").remove()
@@ -713,7 +718,27 @@ function append_dots_errobars (svg, data, xScale, yScale, div, cValue, color,div
       .attr("r", 6)
       .style("fill", function(d) {
         return color(cValue(d));
-      })    
+      })
+      .on("mouseover", function(d) {
+        // show tooltip only if the tool is visible
+        let ID = divid+"___"+d.toolname.replace(/[\. ()/-]/g, "_");
+
+        if (d3.select("#"+ID).style("opacity") == 1) {
+          div.transition()		
+              .duration(100)		
+              .style("display","block")		
+              .style("opacity", .9);		
+          div.html("<b>" + d.toolname + "</b><br/>"  + metric_x_name + ": " + formatComma(d.x) + "<br/>"  + metric_y_name + ": " + formatDecimal(d.y))	
+              .style("left", (d3.event.pageX) + "px")		
+              .style("top", (d3.event.pageY) + "px");
+        }
+      })					
+      .on("mouseout", function(d) {		
+        div.transition()		
+          .duration(1500)
+          .style("display","none")		
+          .style("opacity", 0);	
+      });    
     
 };
 
@@ -937,7 +962,22 @@ function get_square_quartiles(data, svg, xScale, yScale, div, removed_tools,bett
     .attr("stroke", "#0A58A2")
     .attr("stroke-width",2)
     .style("stroke-dasharray", ("20, 5"))
-    .style("opacity", 0.4);
+    .style("opacity", 0.4)
+    .on("mouseover", function(d) {	
+      div.transition()		
+         .duration(100)		
+         .style("display","block")		
+         .style("opacity", .9);		
+      div.html("X quartile = " + formatComma( quantile_x) )	
+         .style("left", (d3.event.pageX) + "px")		
+         .style("top", (d3.event.pageY) + "px");
+    })					
+    .on("mouseout", function(d) {		
+      div.transition()		
+         .duration(1000)
+         .style("display","none")				
+         .style("opacity", 0);	
+    });
 
   svg.append("line")
     .attr("x1", xScale(x_axis[0]))
@@ -948,7 +988,23 @@ function get_square_quartiles(data, svg, xScale, yScale, div, removed_tools,bett
     .attr("stroke", "#0A58A2")
     .attr("stroke-width",2)
     .style("stroke-dasharray", ("20, 5"))
-    .style("opacity", 0.4);
+    .style("opacity", 0.4)
+    .on("mouseover", function(d) {	
+      div.transition()		
+         .duration(100)		
+         .style("display","block")		
+         .style("opacity", .9);		
+      div	.html("Y quartile = " + formatComma(quantile_y) )	
+          .style("left", (d3.event.pageX) + "px")		
+          .style("top", (d3.event.pageY) + "px");
+    })					
+    .on("mouseout", function(d) {		
+      div.transition()		
+         .duration(1500)
+         .style("display","none")			
+         .style("opacity", 0);	
+    });
+
 
     //the tranformation to tabular format is done only if there are any table elements in the html file
     if (transform_to_table == true) {

@@ -126,9 +126,9 @@
                     "stderr_y": 0.027529603
                 },
                 {
-                    "metric_x": 0.71450138,
-                    "metric_y": 0.94466975,
-                    "participant_id": "TEST_TOOL",
+                    "metric_x": 0.62,
+                    "metric_y": 0.9,
+                    "participant_id": "TEST_TOOL_R2",
                     "stderr_x": 0.031602817,
                     "stderr_y": 0.027241354
                 }
