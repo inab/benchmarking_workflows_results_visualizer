@@ -75,11 +75,12 @@
         border: 2px solid black;
         border-collapse: collapse;
         text-align: center;
-        font-size: .7vw;
+        font-size: .8vw;
     }
 
     .benchmarkingTable {
-        width: 12vw; 
+        order:2;
+        width: 20vw; 
         border-collapse: collapse; 
         background-color: #f0f0f0;
         border: 5px solid black; 
@@ -91,11 +92,19 @@
     }
 
     .benchmarkingChart{
-        width: 80vw;
+        width: inherit;
     }
 
+    .flex-container {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+  }
+
     .benchmarkingSVG{
-        width: 61vw;
+      order:1;
+        width: 60vw;
     }
       .axis--x {
           font-size: 12px;

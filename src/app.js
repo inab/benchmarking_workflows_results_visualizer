@@ -105,7 +105,8 @@ function loadurl(res, data_dir){
         })
         .append("optgroup")
         .attr("label","Select a classification method:");
-  
+        
+        d3.select('#'+divid).append("div").attr("class", "flex-container").attr("id", divid + "flex-container")
         select_list.append("option")
         .attr("class", "selection_option")
         .attr("id", button1_id)
@@ -147,7 +148,7 @@ function loadurl(res, data_dir){
       if (y.getAttribute('toTable') == "true"){
         let table_id = divid + "_table";
         var input = $('<br><br><table id="'+table_id+'" data-id="'+dataId+'" class="benchmarkingTable"></table>');
-        $("#" + divid).append(input);
+        $("#" + divid + "flex-container").append(input);
 
       };
             
@@ -241,6 +242,15 @@ function read_json(res, divid, data_dir){
         "e_y": element.stderr_y ? parseFloat(element.stderr_y) : 0
       });
     });
+    // sort participants alphabeticallys
+    full_json.sort(function(a,b){
+      let x = a.toolname.toLowerCase();
+      let y = b.toolname.toLowerCase();
+      if (x < y) { return -1;}
+      if (x > y){ return 1;}
+      return 0;
+  });
+
     // get name of the two metrics from the aggregation dataset
     let metric_x_name = content.datalink.inline_data.visualization.x_axis;
     let metric_y_name = content.datalink.inline_data.visualization.y_axis;
@@ -323,20 +333,18 @@ function add_arrow(divid, svg, xScale, yScale, better){
   let y_axis = yScale.domain();
 
   // set coordinates depending on optimization
-  let x1, y1, x2, y2, top;
+  let x1, y1, x2, y2;
   if (better == "bottom-right"){
     x1 = (x_axis[1]-(0.05*(x_axis[1]-x_axis[0])))
     y1 = (y_axis[1]-(0.9*(y_axis[1]-y_axis[0])))
     x2 = (x_axis[1]-(0.009*(x_axis[1]-x_axis[0]))) 
     y2 = (y_axis[1]-(0.97*(y_axis[1]-y_axis[0]))) 
-    top = 0
  } 
  else if (better == "top-right"){
     x1 = (x_axis[1]-(0.05*(x_axis[1]-x_axis[0])))
     y1 = (y_axis[1]-(0.1*(y_axis[1]-y_axis[0])))
     x2 = (x_axis[1]-(0.009*(x_axis[1]-x_axis[0]))) 
-    y2 = (y_axis[1]-(0.03*(y_axis[1]-y_axis[0]))) 
-    top = 1
+    y2 = (y_axis[1]-(0.04*(y_axis[1]-y_axis[0]))) 
  };
 
   var line = svg.append("line")
@@ -352,8 +360,8 @@ function add_arrow(divid, svg, xScale, yScale, better){
 
   svg.append("text")
   .attr("class", function (d) { return divid+"___better_annotation";})
-  .attr("x", xScale(x_axis[1]))
-  .attr("y", yScale(y_axis[top]))
+  .attr("x", xScale(x1*0.99))
+  .attr("y", yScale(y2))
   .style("opacity", 0.4)
   .style("font-size", ".7vw")
   .text("better");
@@ -388,7 +396,7 @@ function get_avg_stderr(data, axis){
 }
 
 function createChart (data,divid, classification_type, metric_x_name, metric_y_name){
-  // console.log(data)
+
   let margin = {top: 20, right: 40, bottom: compute_chart_height(data), left: 60},
     width = Math.round($(window).width()* 0.6818) - margin.left - margin.right,
     height = Math.round($(window).height()* 0.5787037) - margin.top - margin.bottom;
@@ -426,12 +434,12 @@ function createChart (data,divid, classification_type, metric_x_name, metric_y_n
 
   // Define the div for the tooltip
 
-  let div = d3.select('#'+divid).append("div").attr("class", "benchmark_tooltip").style("opacity", 0);
+  let div = d3.select("body").append("div").attr("class", "benchmark_tooltip").style("opacity", 0);
 
   // append the svg element
   // d3.select("svg").remove()
     // console.log(d3.select("svg").remove());
-  let svg = d3.select('#'+divid).append("svg")
+  let svg = d3.select('#'+divid+ "flex-container").append("svg")
     .attr("class", "benchmarkingSVG")
     .attr("viewBox", "0 0 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
     .attr("preserveAspectRatio", "xMinYMin meet")
@@ -457,7 +465,7 @@ function createChart (data,divid, classification_type, metric_x_name, metric_y_n
                        (height + margin.top + (Math.round($(window).height()* 0.0347))) + ")")
   .style("text-anchor", "middle")
   .style("font-weight", "bold")
-  .style("font-size", ".75vw")
+  .style("font-size", ".95vw")
   .text(metric_x_name);
 
   svg.append("text")
@@ -467,7 +475,7 @@ function createChart (data,divid, classification_type, metric_x_name, metric_y_n
       .attr("dy", "1em")
       .style("text-anchor", "middle")
       .style("font-weight", "bold")
-      .style("font-size", ".75vw")
+      .style("font-size", ".95vw")
       .text(metric_y_name ); 
   
   // add pareto legend
@@ -672,20 +680,41 @@ function append_dots_errobars (svg, data, xScale, yScale, div, cValue, color,div
       .attr("r", 6)
       .style("fill", function(d) {
         return color(cValue(d));
-      })    
+      }) 
+      .on("mouseover", function(d) {
+        // show tooltip only if the tool is visible
+        let ID = divid+"___"+d.toolname.replace(/[\. ()/-]/g, "_");
+
+        if (d3.select("#"+ID).style("opacity") == 1) {
+          div.transition()		
+              .duration(100)		
+              .style("display","block")		
+              .style("opacity", .9);		
+          div.html("<b>" + d.toolname + "</b><br/>"  + metric_x_name + ": " + formatComma(d.x) + "<br/>"  + metric_y_name + ": " + formatDecimal(d.y))	
+              .style("left", (d3.event.pageX) + "px")		
+              .style("top", (d3.event.pageY) + "px");
+        }
+      })					
+      .on("mouseout", function(d) {		
+        div.transition()		
+          .duration(1500)
+          .style("display","none")		
+          .style("opacity", 0);	
+      });   
     
 };
 
 function draw_legend (data, svg, xScale, yScale, div, width, height, removed_tools, color, color_domain, margin,divid,classification_type, legend_color_palette) {
 
   //set number of elements per legend row
-  let n = 5;
+  let n = 4;
 
   let legend = svg.selectAll(".legend")
     .data(color_domain)
     .enter().append("g")
     .attr("class", "legend")
-    .attr("transform", function(d, i) { return "translate(" + (-width+i%n*(Math.round($(window).width()* 0.113636))) + "," + (height + (Math.round($(window).height()* 0.0862962)) + Math.floor(i/n) * (Math.round($(window).height()* 0.0231481))) + ")"; });
+    .attr("transform", function(d, i) { return "translate(" + (-width+i%n*(Math.round($(window).width()* 0.16))) + "," + (height + (Math.round($(window).height()* 0.0862962)) + Math.floor(i/n) * (Math.round($(window).height()* 0.0251481))) + ")"; });
+
   
   // draw legend colored rectangles
   legend.append("rect")
@@ -764,7 +793,7 @@ function draw_legend (data, svg, xScale, yScale, div, width, height, removed_too
         .attr("id", function (d) { return divid+"___"+d.replace(/[\. ()/-]/g, "_");})
         .attr("dy", ".35em")
         .style("text-anchor", "start")
-        .style("font-size", ".7vw")
+        .style("font-size", "1vw")
         .text(function(d) {
           return d;
         });
