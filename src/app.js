@@ -65,12 +65,11 @@ UVM:"Uveal Melanoma",
 "G_STD2_Luca":"Generalized Species Tree Discordance Benchmark (Variant 2) - Luca",
 "G_STD2_Fungi":"Generalized Species Tree Discordance Benchmark (Variant 2) - Fungi",
 "G_STD2_Eukaryota":"Generalized Species Tree Discordance Benchmark (Variant 2) - Eukaryota",
-"G_STD2_Vertebrata":"Generalized Species Tree Discordance Benchmark (Variant 2) - Vertebrata"
+"G_STD2_Vertebrata":"Generalized Species Tree Discordance Benchmark (Variant 2) - Vertebrata",
+"lDDT": "Aggregation Dataset for plotting 3D Metric lDDT results for week 2021-05-29"
 };
 
 function loadurl(data_dir){
-
-
     let divid;
     
     let charts = document.getElementsByClassName("benchmarkingChart");
@@ -166,7 +165,6 @@ function run_visualizer(challenge_names){
     // append accordion
   var input = $('<div class="togglebox"></div>');
   $("#custom_body").append(input);
-  
 
   try{
 
@@ -213,15 +211,18 @@ async function build_accordion(data_dir, challenge_names){
                             <input id="radio_' + element.id + +i+'" type="radio" name="toggle"/>\
                             <label for="radio_' + element.id + +i+'">Challenge name: '+full_name+'</label>\
                             <div class="content">\
-                              <div style= "float:left" data-id='+element.id+' toTable="true" class="benchmarkingChart"></div>\
+                              <div style= "float:left" data-id='+element.id+' toTable="true" class="benchmarkingChart">\
+                              <div style="float:right"><br><b>Timestamp: </b><span>'+element.timestamp+'</span></div></div>\
                             </div>\
                           </div>'); 
                   
-          $(".togglebox").append(input);
+          
   
         i++;
         accordion_challenges.push(element.id)
       }
+      
+      $(".togglebox").append(input);
       };
    
     
