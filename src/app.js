@@ -69,6 +69,8 @@ UVM:"Uveal Melanoma",
 "lDDT": "Aggregation Dataset for plotting 3D Metric lDDT results for week 2021-05-29"
 };
 
+var readthedocsLink = 'https://openebench.readthedocs.io/en/dev/how_to/1_explore_results.html'
+
 function loadurl(data_dir){
     let divid;
     
@@ -153,6 +155,8 @@ function loadurl(data_dir){
       };
             
       i++;
+      
+      
     }
         
     
@@ -212,7 +216,6 @@ async function build_accordion(data_dir, challenge_names){
                             <label for="radio_' + element.id + +i+'">Challenge name: '+full_name+'</label>\
                             <div class="content">\
                               <div style= "float:left" data-id='+element.id+' toTable="true" class="benchmarkingChart">\
-                              <div style="float:right"><br><b>Timestamp: </b><span>'+element.timestamp+'</span></div></div>\
                             </div>\
                           </div>'); 
                   
@@ -236,14 +239,15 @@ async function read_jsons(dataId, divid, data_dir){
   var full_json = [];
   var metric_x_name;
   var metric_y_name;
- 
+  var datasetId;
   // look for challenge data in all dir runs
-
+      
+      
       for (const run_dir of data_dir) {
 
         try {
           let content = await $.getJSON(run_dir + "/" + dataId+ "/" + dataId + ".json")
-
+          datasetId = content._id
           metric_x_name = content.datalink.inline_data.visualization.x_axis;
           metric_y_name = content.datalink.inline_data.visualization.y_axis;
 
@@ -292,11 +296,11 @@ async function read_jsons(dataId, divid, data_dir){
     
     };
 
-    load_data_chart(full_json,divid, metric_x_name, metric_y_name)   
+    load_data_chart(full_json, divid, metric_x_name, metric_y_name, datasetId, data_dir)   
      
 }
 
-function load_data_chart(full_json,divid, metric_x_name, metric_y_name){
+function load_data_chart(full_json, divid, metric_x_name, metric_y_name, datasetId, data_dir){
 
   MAIN_DATA[divid] = full_json;
   MAIN_METRICS[divid] = [metric_x_name, metric_y_name]
@@ -305,6 +309,8 @@ function load_data_chart(full_json,divid, metric_x_name, metric_y_name){
   let classification_type = e.options[e.selectedIndex].id;
 
   createChart(full_json,divid, classification_type, metric_x_name, metric_y_name);
+  
+  addMetadataLegend(divid, data_dir, datasetId, metric_x_name, metric_y_name);
 }
 
 
@@ -538,8 +544,7 @@ function createChart (data,divid, classification_type, metric_x_name, metric_y_n
   // .style("font-weight", "bold")
   .style("font-size", ".75vw")
   .text("Pareto frontier");
-
-
+  
   // add X and Y Gridlines
   var gridlines_x = d3.axisBottom()
                     .ticks(12 * height / width)
@@ -574,8 +579,7 @@ function createChart (data,divid, classification_type, metric_x_name, metric_y_n
     data.forEach(function(element) {
       legend_color_palette[element.toolname] = color_func(element.toolname);
     });
-
-
+  
   append_dots_errobars (svg, data, xScale, yScale, div, cValue_func, color_func,divid, metric_x_name, metric_y_name);
 
   draw_legend (data, svg, xScale, yScale, div, width, height, removed_tools, color_func, color_func.domain(), margin,divid,classification_type, legend_color_palette);
@@ -583,6 +587,116 @@ function createChart (data,divid, classification_type, metric_x_name, metric_y_n
     compute_classification(data, svg, xScale, yScale, div, width, height, removed_tools,divid, classification_type, legend_color_palette);
 
   };
+
+async function addMetadataLegend(divid, data_dir, idAggreagation, metric_x_name, metric_y_name) {
+
+  //read manifest 
+  let res =  await read_manifest(data_dir); 
+  var timestamp = res[0].timestamp
+  var participant = res[0].participants.pop()
+  
+  var row = document.createElement("div");
+  row.setAttribute("class", "row");
+
+  var line = document.createElement("hr");
+  line.setAttribute("style", "color: #056483; height: 10px; margin: 0; opacity: 100");
+  //
+  var col1 = document.createElement("div");
+  col1.setAttribute("class", "col-1 text-center title");
+  col1.setAttribute("style", "color:white; background-color: #056483");
+  var txt1 = document.createTextNode("Analysis Details");
+  col1.appendChild(txt1);
+  //
+  var col2 = document.createElement("div");
+  col2.setAttribute("class", "col-3");
+  var span = document.createElement('span');
+  span.setAttribute("class", "title");
+  var txt2 = document.createTextNode("Generated at: ");
+  span.appendChild(txt2);
+  col2.appendChild(span);
+  col2.appendChild(document.createTextNode(timestamp));
+  //
+  var col3 = document.createElement("div");
+  col3.setAttribute("class", "col-3");
+  var span = document.createElement('span');
+  span.setAttribute("class", "title");
+  var txt3 = document.createTextNode("Source Datasets: ");
+  span.appendChild(txt3);
+  col3.appendChild(span);
+  col3.appendChild(document.createElement('br'))
+
+  var span = document.createElement('span');
+  span.setAttribute("class", "title");
+  var txt3 = document.createTextNode("Public participants: " );
+  span.appendChild(txt3);
+  col3.appendChild(span);
+  var txt3 = document.createTextNode(idAggreagation);
+  col3.appendChild(txt3);
+  col3.appendChild(document.createElement('br'))
+
+  var span = document.createElement('span');
+  span.setAttribute("class", "title");
+  var txt3 = document.createTextNode("New participant: " );
+  span.appendChild(txt3);
+  col3.appendChild(span);
+  var txt3 = document.createTextNode(participant);
+  col3.appendChild(txt3);
+  col3.appendChild(document.createElement('br'))
+
+  //
+  var col4 = document.createElement("div");
+  col4.setAttribute("class", "col-2");
+  var span = document.createElement('span');
+  span.setAttribute("class", "title");
+  var txt4 = document.createTextNode("Assessment Metrics: ");
+  span.appendChild(txt4);
+  col4.appendChild(span);
+  col4.appendChild(document.createElement('br'))
+
+  var span = document.createElement('span');
+  span.setAttribute("class", "title");
+  var txt4 = document.createTextNode("x-asis: " );
+  span.appendChild(txt4);
+  col4.appendChild(span);
+  var txt4 = document.createTextNode(metric_x_name);
+  col4.appendChild(txt4);
+  col4.appendChild(document.createElement('br'))
+
+  var span = document.createElement('span');
+  span.setAttribute("class", "title");
+  var txt4 = document.createTextNode("y-asis: " );
+  span.appendChild(txt4);
+  col4.appendChild(span);
+  var txt4 = document.createTextNode(metric_y_name);
+  col4.appendChild(txt4);
+  col4.appendChild(document.createElement('br'))
+
+  //
+  var col5 = document.createElement("div");
+  col5.setAttribute("class", "col-2");
+  var span = document.createElement('span');
+  span.setAttribute("class", "title");
+  var txt5 = document.createTextNode("More information: ");
+  var link = document.createElement("a");
+  link.setAttribute("href", readthedocsLink)
+  link.appendChild(document.createTextNode("Visualitzation and interpretation"))
+  span.appendChild(txt5)
+  col5.appendChild(span)
+  col5.appendChild(link)
+
+  var line2 = document.createElement("hr");
+  line2.setAttribute("style", "color: #056483; height: 10px; margin: 0; opacity: 100");
+
+  row.appendChild(line);
+  row.appendChild(col1);
+  row.appendChild(col2);
+  row.appendChild(col3)
+  row.appendChild(col4)
+  row.appendChild(col5)
+
+  $("#" + divid).append(row);
+  $("#" + divid).append(document.createElement("br"));
+}
 
 function append_dots_errobars (svg, data, xScale, yScale, div, cValue, color,divid, metric_x_name, metric_y_name){
 

@@ -169,7 +169,6 @@ label:after {
 }
 
 .content {
- height: 0;
  overflow: hidden;
 }
 
@@ -187,4 +186,9 @@ input[type="radio"]:checked ~ label:after {
 
 input[type="radio"]:checked ~ .content {
  height: 65vh;
+}
+
+/******* METADATA LEGEND *******/
+.title {
+  font-weight: bold;
 }
