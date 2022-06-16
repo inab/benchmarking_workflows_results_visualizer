@@ -189,6 +189,13 @@ input[type="radio"]:checked ~ .content {
 }
 
 /******* METADATA LEGEND *******/
-.title {
+.title-tag {
   font-weight: bold;
 }
+
+.ident{
+   margin-left: 1.5em;
+}
+
+
+
