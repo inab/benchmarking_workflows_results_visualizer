@@ -12,6 +12,7 @@ import * as d3Polygon from "d3-polygon";
 let MAIN_DATA = {};
 let MAIN_METRICS = {};
 let MAIN_METADATA = {};
+let MAIN_MANIFEST = {};
 let better = {};
 
 // List of full challenge names : acronyms. Will be different depending on the community
@@ -70,25 +71,58 @@ var challenge_names = {
 };
 
 var readthedocsLink = 'https://openebench.readthedocs.io/en/latest/how_to/1_explore_results.html'
-var API = 'https://dev-openebench.bsc.es/api/scientific/public/'
+var API = `${window.location.protocol}://${window.location.host}/api/scientific/public/`;
 
-function loadurl(data_dir) {
+
+const REPLACE_TABLE = [
+    ["!", "%21"],
+    ["#", "%23"],
+    ["$", "%24"],
+    ["&", "%26"],
+    ["'", "%27"],
+    ["(", "%28"],
+    [")", "%29"],
+    ["*", "%2A"],
+    ["+", "%2B"],
+    [",", "%2C"],
+    ["/", "%2F"],
+    [":", "%3A"],
+    [";", "%3B"],
+    ["=", "%3D"],
+    ["?", "%3F"],
+    ["@", "%40"],
+    ["-", "%45"],
+    [".", "%46"],
+    ["[", "%5B"],
+    ["]", "%5D"],
+];
+
+function safe_id_string(toolname) {
+    let fixed_toolname = encodeURIComponent(toolname);
+    REPLACE_TABLE.forEach(function(elem) { fixed_toolname = fixed_toolname.replaceAll(elem[0], elem[1]) });
+    
+    return fixed_toolname.replaceAll("%","_");
+}
+
+function loadurl_from_matches(charts_classname, matches) {
     let divid;
 
-    let charts = document.getElementsByClassName("benchmarkingChart");
-
-    let i;
-    let dataId;
-    let y;
+    let charts = document.getElementsByClassName(charts_classname);
 
     // append ids to chart/s and make d3 plot
-    for (y of charts) {
+    for (let y of charts) {
 
         // get benchmarking event id
-        dataId = y.getAttribute('data-id');
-        i = y.getAttribute('element_id');
+        let payload_key = y.getAttribute("payload_key");
+        let dataId = y.getAttribute('data-id');
+        
+        let payload = matches[payload_key];
+        
+        let i = y.getAttribute('element_id');
         //set chart id
-        divid = (dataId + i).replace(":", "_");
+        // let divid = (dataId + i).replace(/[: ]/, "_");
+        //let divid = safe_id_string(dataId + i);
+        let divid = safe_id_string(dataId + i);
         y.id = divid;
 
         // append buttons
@@ -99,13 +133,13 @@ function loadurl(data_dir) {
 
         // append selection list tooltip container
         d3.select('#' + divid).append("div")
-            .attr("id", "tooltip_container")
+            .attr("id", "tooltip_container");
 
         let select_list = d3.select('#' + divid).append("form").append("select")
             .attr("class", "classificators_list")
             .attr("id", divid + "_dropdown_list")
             .on('change', function(d) {
-                onQuartileChange(this.options[this.selectedIndex].id);
+                onQuartileChange(this.options[this.selectedIndex].id, divid);
             })
             .append("optgroup")
             .attr("label", "Select a classification method:");
@@ -143,7 +177,7 @@ function loadurl(data_dir) {
             .attr("data-container", "#tooltip_container")
             .text("K-MEANS CLUSTERING")
 
-        read_jsons(dataId, divid, data_dir, i)
+        load_json_into_chart(payload, divid);
 
 
         //check the transformation to table attribute and append table to html
@@ -160,17 +194,16 @@ function loadurl(data_dir) {
 
 };
 
-
-function run_visualizer(challenge_names) {
-
+function run_visualizer(challenge_names, tag_id, charts_classname) {
     // append accordion
     var input = $('<div class="togglebox"></div>');
-    $("#custom_body").append(input);
+    let custom_body = $("#"+tag_id);
+    custom_body.append(input);
 
     try {
 
-        let data_dir = $('#custom_body').data("dir")
-        build_accordion(data_dir, challenge_names)
+        let data_dir = custom_body.data("dir");
+        build_accordion(input, charts_classname, data_dir, challenge_names);
 
     } catch (err) {
         console.log(`Invalid Url Error: ${err.stack} `);
@@ -188,30 +221,43 @@ async function read_manifest(run_dir) {
     return res
 }
 
-async function build_accordion(data_dir, challenge_names) {
+async function build_accordion(togglebox, charts_classname, data_dir, challenge_names) {
 
     var accordion_challenges = []; // this var will store the ids of challenges that are already in the accordion
 
     // loop over all the directories passed to the div and read manifest
+    let matches = {};
     for (const run_dir of data_dir) {
 
         let res = await read_manifest(run_dir);
         var i = 0;
         for (const element of res) {
-            let content = await $.getJSON(run_dir + "/" + element.id + "/" + element.id + ".json")
-            
+            let payload_key = run_dir + "/" + element.id;
+            let content = await $.getJSON(payload_key + "/" + element.id + ".json");
+            // This is to support other ancient corner cases
+            if(!Array.isArray(content)) {
+                content = [ content ];
+            }
             // append new challenge to accordion, if it is not already there
             for (let i = 0; i < content.length; i++) {
 				if(content[i].datalink.inline_data.visualization.type == "2D-plot"){
-					
-					var input = $('<div>\
-								<input id="radio_' + element.id + i + '" type="radio" name="toggle"/>\
-								<label for="radio_' + element.id + i + '">' + content[i]._id + '</label>\
-								<div class="content">\
-								  <div style= "float:left" element_id ='+i+' data-id=' + element.id + ' toTable="true" class="benchmarkingChart">\
-								</div>\
-							  </div>');
-					$(".togglebox").append(input);
+                    // console.log(content[i]._id, element.id, i);
+                    let input = $('<div>\
+                                    <input id="radio_' + element.id + i + '" type="radio" name="toggle"/>\
+                                    <label for="radio_' + element.id + i + '">' + content[i]._id + ' (' + content[i].datalink.inline_data.visualization.x_axis + ' vs '+ content[i].datalink.inline_data.visualization.y_axis + ')</label>\
+                                    <div class="content">\
+                                      <div style= "float:left" payload_key="' + payload_key + '" run_dir="' + run_dir + '" element_id="'+i+'" data-id="' + element.id + '" toTable="true" class="' + charts_classname + '">\
+                                    </div> \
+                                  </div>');
+                    togglebox.append(input);
+                    matches[payload_key] = {
+                        data_dir: data_dir,
+                        run_dir: run_dir,
+                        element_id: i,
+                        data_id: element.id,
+                        content: content[i],
+                        manifest: element
+                    };
 				}
 
             }
@@ -228,7 +274,7 @@ async function build_accordion(data_dir, challenge_names) {
                             <input id="radio_' + element.id + +i + '" type="radio" name="toggle"/>\
                             <label for="radio_' + element.id + +i + '">Challenge name: ' + full_name + '</label>\
                             <div class="content">\
-                              <div style= "float:left" data-id=' + element.id + ' toTable="true" class="benchmarkingChart">\
+                              <div style= "float:left" data-id=' + element.id + ' toTable="true" class="'+charts_classname+'">\
                             </div>\
                           </div>');
 
@@ -245,9 +291,11 @@ async function build_accordion(data_dir, challenge_names) {
 
     };
 
-    loadurl(data_dir);
+    // console.log(matches);
+    loadurl_from_matches(charts_classname, matches);
 
 }
+
 async function read_jsons(dataId, divid, data_dir, i) {
 
     // look for challenge data in all dir runs
@@ -320,34 +368,111 @@ async function read_jsons(dataId, divid, data_dir, i) {
             continue;
 
         }
-        load_data_chart(full_json, metadata, divid, metric_x_name, metric_y_name, data_dir)
+        load_data_chart(full_json, metadata, {}, divid, metric_x_name, metric_y_name, data_dir)
     };
 
 
 
 }
 
-function load_data_chart(full_json, metadata, divid, metric_x_name, metric_y_name, data_dir) {
+async function load_json_into_chart(payload, divid) {
 
-    MAIN_DATA[divid] = full_json;
-    MAIN_METRICS[divid] = [metric_x_name, metric_y_name]
-    MAIN_METADATA = metadata
-    // by default, no classification method is applied. it is the first item in the selection list
-    var e = document.getElementById(divid + "_dropdown_list");
-    let classification_type = e.options[e.selectedIndex].id;
+    // look for challenge data in all dir runs
 
-    createChart(full_json, divid, classification_type, metric_x_name, metric_y_name, metadata);
+    var full_json = [];
+    var metadata = [];
+    var metric_x_name;
+    var metric_y_name;
+    var metric_x_id = "";
+    var metric_y_id = "";
+    var datasetId;
+    try {
+        let content = payload.content;
+        let dataId = payload.data_id;
+        let data_dir = payload.data_dir;
+            
+        datasetId = content._id
+        metric_x_name = content.datalink.inline_data.visualization.x_axis;
+        metric_y_name = content.datalink.inline_data.visualization.y_axis;
+        metadata['datasetId'] = datasetId
+        metadata['metric_x_id'] = metric_x_id;
+        metadata['metric_y_id'] = metric_y_id;
+        if (content.datalink.inline_data.metrics) {
+            metric_x_id = content.datalink.inline_data.metrics.metric_x_id;
+            metric_y_id = content.datalink.inline_data.metrics.metric_y_id;
+            metadata['metric_x_id'] = metric_x_id;
+            metadata['metric_y_id'] = metric_y_id;
+        }
+
+        // build array with every participant as a simple json object
+        content.datalink.inline_data.challenge_participants.forEach(function(element) {
+
+            if (content.datalink.inline_data.visualization.optimization != null) {
+                better[divid] = content.datalink.inline_data.visualization.optimization;
+            } else {
+                better[divid] = "top-right";
+            }
+            //if participant name is too long, slice it
+            var name;
+            if (element.participant_id.length > 22) {
+                name = element.participant_id.substring(0, 22);
+            } else {
+                name = element.participant_id
+            }
+
+            //only add participant to final json if it is not already there
+            // due to the multi run combinations...participants could be added more than once
+            let found;
+            full_json.forEach(function(tool) {
+                if (tool.toolname == name) {
+                    found = true;
+                }
+            });
+
+            if (found != true) {
+                full_json.push({
+                    "toolname": name,
+                    "x": parseFloat(element.metric_x),
+                    "y": parseFloat(element.metric_y),
+                    "e_x": element.stderr_x ? parseFloat(element.stderr_x) : 0,
+                    "e_y": element.stderr_y ? parseFloat(element.stderr_y) : 0
+                });
+            }
+
+
+
+        });
+        load_data_chart(full_json, metadata, payload.manifest, divid, metric_x_name, metric_y_name, data_dir);
+
+    } catch(e) { // if not found, skip to next directory
+        console.error(e, e.stack);
+    }
+
+
 
 }
 
 
-function onQuartileChange(ID, metric_x_name, metric_y_name) {
+function load_data_chart(full_json, metadata, manifest, divid, metric_x_name, metric_y_name, data_dir) {
 
-    var chart_id = ID.split("__")[0];
-    // console.log(d3.select('#'+'svg_'+chart_id));
+    MAIN_DATA[divid] = full_json;
+    MAIN_METRICS[divid] = [metric_x_name, metric_y_name]
+    MAIN_METADATA[divid] = metadata;
+    MAIN_MANIFEST[divid] = manifest;
+    // by default, no classification method is applied. it is the first item in the selection list
+    var e = document.getElementById(divid + "_dropdown_list");
+    let classification_type = e.options[e.selectedIndex].id;
+
+    createChart(manifest, full_json, divid, classification_type, metric_x_name, metric_y_name, metadata);
+
+}
+
+
+function onQuartileChange(ID, chart_id) {
+
     d3.select('#' + 'svg_' + chart_id).remove();
     let classification_type = ID;
-    createChart(MAIN_DATA[chart_id], chart_id, classification_type, MAIN_METRICS[chart_id][0], MAIN_METRICS[chart_id][1], MAIN_METADATA);
+    createChart(MAIN_MANIFEST[chart_id], MAIN_DATA[chart_id], chart_id, classification_type, MAIN_METRICS[chart_id][0], MAIN_METRICS[chart_id][1], MAIN_METADATA[chart_id]);
 };
 
 function compute_classification(data, svg, xScale, yScale, div, width, height, removed_tools, divid, classification_type, legend_color_palette) {
@@ -479,7 +604,7 @@ function get_avg_stderr(data, axis) {
 
 }
 
-function createChart(data, divid, classification_type, metric_x_name, metric_y_name, metadata) {
+function createChart(manifest, data, divid, classification_type, metric_x_name, metric_y_name, metadata) {
 
     let margin = {
             top: 20,
@@ -645,22 +770,27 @@ function createChart(data, divid, classification_type, metric_x_name, metric_y_n
 
     //metadata
     $('.container-fluid#' + divid).remove();
-    addMetadataLegend(divid, $('#custom_body').data("dir"), metadata['datasetId'], metric_x_name, metadata['metric_x_id'], metric_y_name, metadata['metric_y_id']);
+    addMetadataLegend(divid, manifest, $('#custom_body').data("dir"), metadata['datasetId'], metric_x_name, metadata['metric_x_id'], metric_y_name, metadata['metric_y_id']);
 
 };
 
-async function addMetadataLegend(divid, data_dir, idAggreagation, metric_x_name, metric_x_id, metric_y_name, metric_y_id) {
+async function addMetadataLegend(divid, manifest, data_dir, idAggreagation, metric_x_name, metric_x_id, metric_y_name, metric_y_id) {
     //get metrics description
 
     //read manifest 
-    let res = await read_manifest(data_dir);
-    var timestamp = ""
-    if (res[0].timestamp) {
-        timestamp = res[0].timestamp.split("+")[0].split("T")
+    var timestamp = "";
+    if (manifest.timestamp) {
+        // timestamp = manifest.timestamp.split("+")[0].split("T")[0];
+        timestamp = manifest.timestamp;
     }
 
-    var participant = res[0].participants.pop()
-    var mode = res[0].mode
+    let participant;
+    if(manifest.new_participans) {
+        participant = manifest.new_participans.join(", ");
+    } else {
+        participant = manifest.participants[0];
+    }
+    var mode = manifest.mode;
 
     var container = document.createElement("div");
     container.setAttribute("class", "container-fluid");
@@ -719,7 +849,7 @@ async function addMetadataLegend(divid, data_dir, idAggreagation, metric_x_name,
 
     var span = document.createElement('span');
     span.setAttribute("class", "title-tag ident");
-    var txt3 = document.createTextNode("New participant: ");
+    var txt3 = document.createTextNode("New participant(s): ");
     span.appendChild(txt3);
     col3.appendChild(span);
     var txt3 = document.createTextNode(participant);
@@ -783,7 +913,7 @@ async function addMetadataLegend(divid, data_dir, idAggreagation, metric_x_name,
     var link = document.createElement("a");
     link.setAttribute("href", readthedocsLink)
     link.setAttribute("target", "_blank")
-    link.appendChild(document.createTextNode("Visualitzation and interpretation"))
+    link.appendChild(document.createTextNode("Visualization and interpretation"))
     span.appendChild(txt5)
     col5.appendChild(span)
     col5.appendChild(link)
@@ -811,7 +941,7 @@ function append_dots_errobars(svg, data, xScale, yScale, div, cValue, color, div
         .append("line")
         .attr("class", "error-line")
         .attr("id", function(d) {
-            return divid + "___line" + d.toolname.replace(/[\. ()/-]/g, "_");
+            return divid + "___line" + safe_id_string(d.toolname);
         })
         .attr("x1", function(d) {
             return xScale(d.x);
@@ -832,7 +962,7 @@ function append_dots_errobars(svg, data, xScale, yScale, div, cValue, color, div
         .append("line")
         .attr("class", "error-line")
         .attr("id", function(d) {
-            return divid + "___lineX" + d.toolname.replace(/[\. ()/-]/g, "_");
+            return divid + "___lineX" + safe_id_string(d.toolname);
         })
         .attr("x1", function(d) {
             return xScale(d.x - d.e_x);
@@ -852,7 +982,7 @@ function append_dots_errobars(svg, data, xScale, yScale, div, cValue, color, div
         .data(data).enter()
         .append("line")
         .attr("id", function(d) {
-            return divid + "___top" + d.toolname.replace(/[\. ()/-]/g, "_");
+            return divid + "___top" + safe_id_string(d.toolname);
         })
         .attr("class", "error-cap")
         .attr("x1", function(d) {
@@ -873,7 +1003,7 @@ function append_dots_errobars(svg, data, xScale, yScale, div, cValue, color, div
         .data(data).enter()
         .append("line")
         .attr("id", function(d) {
-            return divid + "___bottom" + d.toolname.replace(/[\. ()/-]/g, "_");
+            return divid + "___bottom" + safe_id_string(d.toolname);
         })
         .attr("class", "error-cap")
         .attr("x1", function(d) {
@@ -895,7 +1025,7 @@ function append_dots_errobars(svg, data, xScale, yScale, div, cValue, color, div
         .append("line")
         .attr("class", "error-cap")
         .attr("id", function(d) {
-            return divid + "___right" + d.toolname.replace(/[\. ()/-]/g, "_");
+            return divid + "___right" + safe_id_string(d.toolname);
         })
         .attr("x1", function(d) {
             return xScale(d.x + d.e_x);
@@ -916,7 +1046,7 @@ function append_dots_errobars(svg, data, xScale, yScale, div, cValue, color, div
         .append("line")
         .attr("class", "error-cap")
         .attr("id", function(d) {
-            return divid + "___left" + d.toolname.replace(/[\. ()/-]/g, "_");
+            return divid + "___left" + safe_id_string(d.toolname);
         })
         .attr("x1", function(d) {
             return xScale(d.x - d.e_x);
@@ -947,7 +1077,7 @@ function append_dots_errobars(svg, data, xScale, yScale, div, cValue, color, div
             return d3.symbolSquare
         }))
         .attr("id", function(d) {
-            return divid + "___" + d.toolname.replace(/[\. ()/-]/g, "_");
+            return divid + "___" + safe_id_string(d.toolname);
         })
         .attr("class", "line")
         .attr('transform', function(d) {
@@ -959,7 +1089,7 @@ function append_dots_errobars(svg, data, xScale, yScale, div, cValue, color, div
         })
         .on("mouseover", function(d) {
             // show tooltip only if the tool is visible
-            let ID = divid + "___" + d.toolname.replace(/[\. ()/-]/g, "_");
+            let ID = divid + "___" + safe_id_string(d.toolname);
 
             if (d3.select("#" + ID).style("opacity") == 1) {
                 div.transition()
@@ -999,24 +1129,24 @@ function draw_legend(data, svg, xScale, yScale, div, width, height, removed_tool
         .attr("width", Math.round($(window).width() * 0.010227))
         .attr("height", Math.round($(window).height() * 0.020833))
         .attr("id", function(d) {
-            return divid + "___leg_rect" + d.replace(/[\. ()/-]/g, "_");
+            return divid + "___leg_rect" + safe_id_string(d);
         })
         .attr("class", "benchmark_legend_rect")
         .style("fill", color)
         .on('click', function(d) {
 
-            let dot = d3.select("text#" + divid + "___" + d.replace(/[\. ()/-]/g, "_"));
+            let dot = d3.select("text#" + divid + "___" + safe_id_string(d));
             let ID = dot._groups[0][0].id;
 
             if (data.length - removed_tools.length - 1 >= 4) {
 
                 let legend_rect = this;
-                show_or_hide_participant_in_plot(ID, data, svg, xScale, yScale, div, width, height, removed_tools, divid, classification_type, legend_rect, legend_color_palette);
+                show_or_hide_participant_in_plot(ID, d, data, svg, xScale, yScale, div, width, height, removed_tools, divid, classification_type, legend_rect, legend_color_palette);
 
             } else if (data.length - removed_tools.length - 1 < 4 && (d3.select("#" + ID).style("opacity")) == 0) {
 
                 let legend_rect = this;
-                show_or_hide_participant_in_plot(ID, data, svg, xScale, yScale, div, width, height, removed_tools, divid, classification_type, legend_rect, legend_color_palette);
+                show_or_hide_participant_in_plot(ID, d, data, svg, xScale, yScale, div, width, height, removed_tools, divid, classification_type, legend_rect, legend_color_palette);
 
             } else {
 
@@ -1037,7 +1167,7 @@ function draw_legend(data, svg, xScale, yScale, div, width, height, removed_tool
         })
         .on("mouseover", function(d) {
 
-            let dot = d3.select("text#" + divid + "___" + d.replace(/[\. ()/-]/g, "_"));
+            let dot = d3.select("text#" + divid + "___" + safe_id_string(d));
             let ID = dot._groups[0][0].id;
             let tool_id = ID.split("___")[1];
 
@@ -1052,7 +1182,7 @@ function draw_legend(data, svg, xScale, yScale, div, width, height, removed_tool
         })
         .on("mouseout", function(d) {
 
-            let dot = d3.select("text#" + divid + "___" + d.replace(/[\. ()/-]/g, "_"));
+            let dot = d3.select("text#" + divid + "___" + safe_id_string(d));
             let ID = dot._groups[0][0].id;
             let tool_id = ID.split("___")[1];
 
@@ -1070,7 +1200,7 @@ function draw_legend(data, svg, xScale, yScale, div, width, height, removed_tool
         .attr("x", width + Math.round($(window).width() * 0.022727))
         .attr("y", Math.round($(window).height() * 0.01041))
         .attr("id", function(d) {
-            return divid + "___" + d.replace(/[\. ()/-]/g, "_");
+            return divid + "___" + safe_id_string(d);
         })
         .attr("dy", ".35em")
         .style("text-anchor", "start")
@@ -1138,9 +1268,9 @@ function draw_pareto(data, svg, xScale, yScale, div, width, height, removed_tool
 
 }
 
-function show_or_hide_participant_in_plot(ID, data, svg, xScale, yScale, div, width, height, removed_tools, divid, classification_type, legend_rect, legend_color_palette) {
+function show_or_hide_participant_in_plot(ID, tool_id, data, svg, xScale, yScale, div, width, height, removed_tools, divid, classification_type, legend_rect, legend_color_palette) {
 
-    let tool_id = ID.split("___")[1];
+    let safe_tool_id = safe_id_string(tool_id);
     // remove the existing number and classification lines from plot (if any)
     svg.selectAll("#" + divid + "___x_quartile").remove();
     svg.selectAll("#" + divid + "___y_quartile").remove();
@@ -1163,33 +1293,33 @@ function show_or_hide_participant_in_plot(ID, data, svg, xScale, yScale, div, wi
     // change the opacity to 0 or 1 depending on the current state
     if (blockopacity == 0) {
         d3.select("#" + ID).style("opacity", 1);
-        d3.select("#" + divid + "___top" + tool_id).style("opacity", 1);
-        d3.select("#" + divid + "___bottom" + tool_id).style("opacity", 1);
-        d3.select("#" + divid + "___line" + tool_id).style("opacity", 1);
-        d3.select("#" + divid + "___lineX" + tool_id).style("opacity", 1);
-        d3.select("#" + divid + "___right" + tool_id).style("opacity", 1);
-        d3.select("#" + divid + "___left" + tool_id).style("opacity", 1);
+        d3.select("#" + divid + "___top" + safe_tool_id).style("opacity", 1);
+        d3.select("#" + divid + "___bottom" + safe_tool_id).style("opacity", 1);
+        d3.select("#" + divid + "___line" + safe_tool_id).style("opacity", 1);
+        d3.select("#" + divid + "___lineX" + safe_tool_id).style("opacity", 1);
+        d3.select("#" + divid + "___right" + safe_tool_id).style("opacity", 1);
+        d3.select("#" + divid + "___left" + safe_tool_id).style("opacity", 1);
         // recalculate the quartiles after removing the tools
-        let index = $.inArray(tool_id.replace(/_/g, "-"), removed_tools);
+        let index = $.inArray(tool_id, removed_tools);
         removed_tools.splice(index, 1);
         compute_classification(data, svg, xScale, yScale, div, width, height, removed_tools, divid, classification_type, legend_color_palette);
         //change the legend opacity to keep track of hidden tools
         d3.select(legend_rect).style("opacity", 1);
-        d3.select("text#" + divid + "___" + tool_id).style("opacity", 1);
+        d3.select("text#" + divid + "___" + safe_tool_id).style("opacity", 1);
 
     } else {
         d3.select("#" + ID).style("opacity", 0);
-        d3.select("#" + divid + "___top" + tool_id).style("opacity", 0);
-        d3.select("#" + divid + "___bottom" + tool_id).style("opacity", 0);
-        d3.select("#" + divid + "___line" + tool_id).style("opacity", 0);
-        d3.select("#" + divid + "___lineX" + tool_id).style("opacity", 0);
-        d3.select("#" + divid + "___right" + tool_id).style("opacity", 0);
-        d3.select("#" + divid + "___left" + tool_id).style("opacity", 0);
-        removed_tools.push(tool_id.replace(/_/g, "-"));
+        d3.select("#" + divid + "___top" + safe_tool_id).style("opacity", 0);
+        d3.select("#" + divid + "___bottom" + safe_tool_id).style("opacity", 0);
+        d3.select("#" + divid + "___line" + safe_tool_id).style("opacity", 0);
+        d3.select("#" + divid + "___lineX" + safe_tool_id).style("opacity", 0);
+        d3.select("#" + divid + "___right" + safe_tool_id).style("opacity", 0);
+        d3.select("#" + divid + "___left" + safe_tool_id).style("opacity", 0);
+        removed_tools.push(tool_id);
         compute_classification(data, svg, xScale, yScale, div, width, height, removed_tools, divid, classification_type, legend_color_palette);
         //change the legend opacity to keep track of hidden tools
         d3.select(legend_rect).style("opacity", 0.2);
-        d3.select("text#" + divid + "___" + tool_id).style("opacity", 0.2);
+        d3.select("text#" + divid + "___" + safe_tool_id).style("opacity", 0.2);
     }
 
 };
@@ -1598,7 +1728,7 @@ function remove_hidden_tools(data, removed_tools) {
     // create a new array where the tools that have not been hidden will be stored
     let tools_not_hidden = [];
     data.forEach(element => {
-        let index = $.inArray(element.toolname.replace(/[\. ()/_]/g, "-"), removed_tools);
+        let index = $.inArray(element.toolname, removed_tools);
         if (index == -1) {
             tools_not_hidden.push(element);
         }
@@ -1621,23 +1751,24 @@ function fill_in_table(divid, data, all_participants, removed_tools) {
         row.insertCell(0).innerHTML = element.toolname;
         //if the participant is not hidden the 2nd column is filled with the corresponding quartile
         // if not it is filled with --
-        if ($.inArray(element.toolname.replace(/[\. ()/_]/g, "-"), removed_tools) == -1) {
+        if ($.inArray(element.toolname, removed_tools) == -1) {
             // var quartile;
-            let obj = data.find(o => o.toolname.replace(/[\. ()/_]/g, "-") === element.toolname.replace(/[\. ()/_]/g, "-"));
+            let obj = data.find(o => o.toolname === element.toolname);
             row.insertCell(1).innerHTML = obj.quartile;
         } else {
             row.insertCell(1).innerHTML = "--";
         }
 
         // add id
+        let safe_toolname = safe_id_string(element.toolname);
         var my_cell = row.cells[0];
-        my_cell.id = divid + "___cell" + element.toolname.replace(/[\. ()/-]/g, "_");
+        my_cell.id = divid + "___cell" + safe_toolname;
 
         my_cell.addEventListener('click', function(d) {
 
             let ID = this.id;
             // trigger a click event on the legend rectangle (hide participant)
-            let legend_rect = (divid + "___leg_rect" + ID.split("___cell")[1]);
+            let legend_rect = divid + "___leg_rect" + safe_toolname;
             document.getElementById(legend_rect).dispatchEvent(new Event('click'));
         });
 
@@ -1645,7 +1776,7 @@ function fill_in_table(divid, data, all_participants, removed_tools) {
 
             let ID = this.id;
             d3.select(this).style("cursor", "pointer");
-            let legend_rect = (divid + "___leg_rect" + ID.split("___cell")[1]);
+            let legend_rect = divid + "___leg_rect" + safe_toolname;
 
             if (d3.select(this).style("opacity") == 1 || d3.select(this).style("opacity") == 0.5) {
                 $(this).css('opacity', 0.7);
@@ -1661,7 +1792,7 @@ function fill_in_table(divid, data, all_participants, removed_tools) {
 
             let ID = this.id;
             d3.select(this).style("cursor", "default");
-            let legend_rect = (divid + "___leg_rect" + ID.split("___cell")[1]);
+            let legend_rect = divid + "___leg_rect" + safe_toolname;
 
             if (d3.select("#" + legend_rect).style("opacity") == 0.2 || d3.select("#" + legend_rect).style("opacity") == 0.5) {
                 $(this).css('opacity', 0.5);
@@ -1706,11 +1837,11 @@ function set_cell_colors(divid, legend_color_palette, removed_tools) {
             $(this).css({
                 'background': '#f0f0f5'
             });
-        } else if ($.inArray(cell_value, tools) > -1 && $.inArray(cell_value.replace(/[\. ()/_]/g, "-"), removed_tools) == -1) {
+        } else if ($.inArray(cell_value, tools) > -1 && $.inArray(cell_value, removed_tools) == -1) {
             $(this).css({
                 'background': 'linear-gradient(to left, white 92%, ' + legend_color_palette[cell_value] + ' 8%)'
             });
-        } else if ($.inArray(cell_value.replace(/[\. ()/_]/g, "-"), removed_tools) > -1) {
+        } else if ($.inArray(cell_value, removed_tools) > -1) {
             $(this).css({
                 'background': 'linear-gradient(to left, white 92%, ' + legend_color_palette[cell_value] + ' 8%)',
                 'opacity': 0.5
@@ -1909,9 +2040,9 @@ function isArrayInArray(arr, item) {
 };
 
 export {
-    loadurl,
+    loadurl_from_matches,
     onQuartileChange
 }
 
 
-run_visualizer(challenge_names);
+run_visualizer(challenge_names, "custom_body", "benchmarkingChart");
